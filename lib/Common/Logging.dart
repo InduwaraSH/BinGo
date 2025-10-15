@@ -1,3 +1,4 @@
+import 'package:bingo/Common/UserIdentifier.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
@@ -24,7 +25,7 @@ class _LoggingState extends State<Logging> {
       backgroundColor: const Color(0xFFF3F4F6),
       body: Stack(
         children: [
-          // Background gradient + decorative circles
+          // Background gradient
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
@@ -223,7 +224,9 @@ class _LoggingState extends State<Logging> {
                         children: [
                           CupertinoButton(
                             padding: EdgeInsets.zero,
-                            onPressed: () {},
+                            onPressed: () {
+                              Navigator.of(context).push(_createRoute());
+                            },
                             child: const CircleAvatar(
                               radius: 26,
                               backgroundColor: Color(0xFF00C853),
@@ -245,7 +248,9 @@ class _LoggingState extends State<Logging> {
                           const SizedBox(width: 12),
                           CupertinoButton(
                             padding: EdgeInsets.zero,
-                            onPressed: () {},
+                            onPressed: () {
+                              Navigator.of(context).push(_createRoute());
+                            },
                             child: const CircleAvatar(
                               radius: 26,
                               backgroundColor: Color(0xFF1E88E5),
@@ -266,6 +271,11 @@ class _LoggingState extends State<Logging> {
         ],
       ),
     );
+  }
+
+  // ✅ Use CupertinoPageRoute for native smooth + swipe-back
+  Route _createRoute() {
+    return CupertinoPageRoute(builder: (context) => const Useridentifier());
   }
 
   Widget _buildInputField({
