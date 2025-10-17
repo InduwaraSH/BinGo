@@ -1,7 +1,12 @@
 import 'package:bingo/Common/UserIdentifier.dart';
+import 'package:bingo/Driver/Dri_Nav_Bar.dart';
+import 'package:bingo/H_Owner/H_Owner_NAv_Bar.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:internet_connection_checker/internet_connection_checker.dart';
 
 class Logging extends StatefulWidget {
   const Logging({super.key});
@@ -11,7 +16,7 @@ class Logging extends StatefulWidget {
 }
 
 class _LoggingState extends State<Logging> with TickerProviderStateMixin {
-  final usernameController = TextEditingController();
+  final useremailController = TextEditingController();
   final passwordController = TextEditingController();
 
   bool isVisibleButton = true;
@@ -181,7 +186,7 @@ class _LoggingState extends State<Logging> with TickerProviderStateMixin {
 
                     // 🧩 Glass input fields
                     _buildInputField(
-                      controller: usernameController,
+                      controller: useremailController,
                       hintText: "Enter your ID Number",
                       icon: Iconsax.user,
                     ),
@@ -194,23 +199,153 @@ class _LoggingState extends State<Logging> with TickerProviderStateMixin {
                     ),
                     const SizedBox(height: 40),
 
-                    // 🌈 Login button
+                    // Login button
                     AnimatedSwitcher(
                       duration: const Duration(milliseconds: 400),
                       child: isVisibleButton
                           ? GestureDetector(
-                              onTap: () {
+                              onTap: () async {
+                                if (useremailController.text.isEmpty ||
+                                    passwordController.text.isEmpty) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        'Please fill in all fields.',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontFamily: 'sfpro',
+                                          fontSize: 18,
+                                        ),
+                                      ),
+                                      duration: Duration(seconds: 5),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                  return;
+                                }
+
                                 setState(() {
                                   isVisibleButton = false;
                                   isVisibleLoading = true;
                                 });
 
-                                Future.delayed(const Duration(seconds: 2), () {
+                                bool result =
+                                    await InternetConnectionChecker.createInstance()
+                                        .hasConnection;
+
+                                if (!result) {
                                   setState(() {
                                     isVisibleButton = true;
                                     isVisibleLoading = false;
                                   });
-                                });
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        'No internet connection',
+                                        style: TextStyle(
+                                          color: Colors.black,
+                                          fontFamily: 'sfpro',
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      duration: Duration(seconds: 3),
+                                      backgroundColor: Colors.grey,
+                                    ),
+                                  );
+                                  return;
+                                }
+
+                                try {
+                                  await FirebaseAuth.instance.signOut();
+                                  await FirebaseAuth.instance
+                                      .signInWithEmailAndPassword(
+                                        email: useremailController.text.trim(),
+                                        password: passwordController.text,
+                                      );
+
+                                  // Firebase keys cannot contain ".", "#", "$", "[", or "]"
+                                  String safeEmailKey = useremailController.text
+                                      .trim()
+                                      .replaceAll('.', '_');
+
+                                  DatabaseReference dbref = FirebaseDatabase
+                                      .instance
+                                      .ref()
+                                      .child("Persons")
+                                      .child(safeEmailKey);
+
+                                  final snapshotType = await dbref
+                                      .child('Type')
+                                      .get();
+                                  final snapshotName = await dbref
+                                      .child('Name')
+                                      .get();
+
+                                  if (snapshotType.exists &&
+                                      snapshotName.exists) {
+                                    String type = snapshotType.value.toString();
+                                    String name = snapshotName.value.toString();
+
+                                    if (type == 'House_Owner') {
+                                      await Navigator.pushReplacement(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => HOwnerNavBar(
+                                            office_location: name,
+                                            username: useremailController.text
+                                                .trim(),
+                                          ),
+                                        ),
+                                      );
+                                    } else {
+                                      await Navigator.pushReplacement(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => DriNavBar(
+                                            office_location: name,
+                                            username: useremailController.text
+                                                .trim(),
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'No user data found.',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontFamily: 'sfpro',
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        duration: Duration(seconds: 3),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                  }
+                                } catch (e) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        'Login failed: ${e.toString()}',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontFamily: 'sfpro',
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      duration: Duration(seconds: 4),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                } finally {
+                                  setState(() {
+                                    isVisibleButton = true;
+                                    isVisibleLoading = false;
+                                  });
+                                }
                               },
                               child: Container(
                                 width: double.infinity,
