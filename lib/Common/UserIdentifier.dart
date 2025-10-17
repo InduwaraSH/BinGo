@@ -23,16 +23,12 @@ class _UseridentifierState extends State<Useridentifier>
   @override
   void initState() {
     super.initState();
-
-    // Trigger smooth animation after build
-    Future.delayed(const Duration(milliseconds: 00), () {
+    Future.delayed(const Duration(milliseconds: 100), () {
       setState(() {
         _animateShapes = true;
       });
     });
-
-    // Content fade-in after shapes move
-    Future.delayed(const Duration(milliseconds: 00), () {
+    Future.delayed(const Duration(milliseconds: 400), () {
       setState(() {
         _animateContent = true;
       });
@@ -46,7 +42,7 @@ class _UseridentifierState extends State<Useridentifier>
         height: 260,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF111827), Color(0xFF1F2937)],
+            colors: [Color(0xFF0A0F1F), Color(0xFF1A2238)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -60,21 +56,26 @@ class _UseridentifierState extends State<Useridentifier>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0E141E),
+      backgroundColor: const Color(0xFF0B1220),
       body: Stack(
         children: [
-          // Gradient background
-          Container(
+          // 🌀 Dynamic background gradient
+          AnimatedContainer(
+            duration: const Duration(seconds: 2),
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [Color(0xFF141E30), Color(0xFF243B55)],
+                colors: [
+                  Color(0xFF0E1628),
+                  Color(0xFF122844),
+                  Color(0xFF0E1628),
+                ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
             ),
           ),
 
-          // 🔵 Animated Top Circle
+          // 🔵 Floating glow particles
           AnimatedPositioned(
             duration: const Duration(seconds: 2),
             curve: Curves.easeInOutCubic,
@@ -84,36 +85,37 @@ class _UseridentifierState extends State<Useridentifier>
               opacity: _animateShapes ? 1 : 0,
               duration: const Duration(seconds: 3),
               child: Container(
-                width: 220,
-                height: 220,
+                width: 240,
+                height: 240,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    colors: [Colors.blue.shade400, Colors.cyanAccent.shade100],
+                  gradient: RadialGradient(
+                    colors: [
+                      Colors.blueAccent.withOpacity(0.5),
+                      Colors.transparent,
+                    ],
                   ),
                 ),
               ),
             ),
           ),
-
-          // 🟣 Animated Bottom Circle
           AnimatedPositioned(
             duration: const Duration(seconds: 2),
             curve: Curves.easeInOutCubic,
-            bottom: _animateShapes ? -70 : -250,
+            bottom: _animateShapes ? -60 : -250,
             left: _animateShapes ? -50 : -120,
             child: AnimatedOpacity(
               opacity: _animateShapes ? 1 : 0,
               duration: const Duration(seconds: 3),
               child: Container(
-                width: 220,
-                height: 220,
+                width: 250,
+                height: 250,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  gradient: LinearGradient(
+                  gradient: RadialGradient(
                     colors: [
-                      Colors.purple.shade400,
-                      Colors.pinkAccent.shade100,
+                      Colors.cyanAccent.withOpacity(0.5),
+                      Colors.transparent,
                     ],
                   ),
                 ),
@@ -121,63 +123,93 @@ class _UseridentifierState extends State<Useridentifier>
             ),
           ),
 
-          // ✨ Main Content (Animated Fade-in)
+          // ⚡ Main Content
           SafeArea(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 40),
+              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 50),
               child: AnimatedOpacity(
                 opacity: _animateContent ? 1 : 0,
-                duration: const Duration(milliseconds: 800),
+                duration: const Duration(milliseconds: 1000),
                 curve: Curves.easeInOut,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    const SizedBox(height: 30),
-                    const Text(
-                      "Who Are You?",
-                      style: TextStyle(
-                        fontSize: 40,
+                    // 🧠 App logo or icon
+                    Container(
+                      height: 100,
+                      width: 100,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF00BFFF), Color(0xFF0072FF)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.blueAccent.withOpacity(0.6),
+                            blurRadius: 25,
+                            spreadRadius: 5,
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Iconsax.user_octagon,
                         color: Colors.white,
+                        size: 50,
+                      ),
+                    ),
+                    const SizedBox(height: 30),
+
+                    // 🧩 Title
+                    const Text(
+                      "Identify Yourself",
+                      style: TextStyle(
+                        fontSize: 34,
                         fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        letterSpacing: 0.5,
                         fontFamily: "sfProRoundSemiB",
                       ),
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 20),
-                    Text(
-                      "Before registering, please select your role.\nThis helps us verify your information properly.",
+                    const SizedBox(height: 14),
+                    const Text(
+                      "Select your role to continue registration.\nYour experience will be tailored accordingly.",
+                      textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 16,
                         color: Colors.white70,
-                        fontFamily: "sfproRoundRegular",
                         height: 1.5,
+                        fontFamily: "sfproRoundRegular",
                       ),
-                      textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 50),
 
-                    // Glassmorphic role selector
+                    // 🧭 Role Selector
                     Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(25),
-                        border: Border.all(color: Colors.white24),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.3),
-                            blurRadius: 15,
-                            offset: const Offset(0, 6),
-                          ),
-                        ],
-                      ),
                       padding: const EdgeInsets.symmetric(
                         vertical: 25,
-                        horizontal: 16,
+                        horizontal: 18,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(25),
+                        border: Border.all(
+                          color: Colors.blueAccent.withOpacity(0.3),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.blue.withOpacity(0.2),
+                            blurRadius: 25,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
                       ),
                       child: Column(
                         children: [
                           const Text(
-                            "Select Your Role",
+                            "Choose Role",
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 18,
@@ -189,7 +221,7 @@ class _UseridentifierState extends State<Useridentifier>
                             padding: EdgeInsets.zero,
                             onPressed: () => _showDialog(
                               CupertinoPicker(
-                                magnification: 1.3,
+                                magnification: 1.2,
                                 squeeze: 1.2,
                                 useMagnifier: true,
                                 itemExtent: _kItemExtent,
@@ -202,9 +234,9 @@ class _UseridentifierState extends State<Useridentifier>
                                         0.15,
                                       ),
                                     ),
-                                onSelectedItemChanged: (int selectedItem) {
+                                onSelectedItemChanged: (int index) {
                                   setState(() {
-                                    _selectedRole = selectedItem;
+                                    _selectedRole = index;
                                   });
                                 },
                                 children: List<Widget>.generate(_roles.length, (
@@ -216,7 +248,7 @@ class _UseridentifierState extends State<Useridentifier>
                                       style: const TextStyle(
                                         color: Colors.white,
                                         fontFamily: "sfProRoundSemiB",
-                                        fontSize: 24,
+                                        fontSize: 22,
                                       ),
                                     ),
                                   );
@@ -230,7 +262,7 @@ class _UseridentifierState extends State<Useridentifier>
                               ),
                               decoration: BoxDecoration(
                                 color: Colors.white.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(20),
+                                borderRadius: BorderRadius.circular(18),
                                 border: Border.all(
                                   color: Colors.white.withOpacity(0.2),
                                 ),
@@ -239,9 +271,8 @@ class _UseridentifierState extends State<Useridentifier>
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   const Icon(
-                                    Iconsax.briefcase,
+                                    Iconsax.personalcard,
                                     color: Colors.white70,
-                                    size: 24,
                                   ),
                                   const SizedBox(width: 10),
                                   Text(
@@ -265,28 +296,15 @@ class _UseridentifierState extends State<Useridentifier>
                           const SizedBox(height: 20),
                           const Divider(color: Colors.white24, thickness: 1),
                           const SizedBox(height: 15),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: const [
-                              Text(
-                                "Driver - Tractor Driver",
-                                style: TextStyle(
-                                  color: Colors.white60,
-                                  fontSize: 14,
-                                  fontFamily: "sfproRoundRegular",
-                                ),
-                              ),
-                              SizedBox(height: 6),
-                              Text(
-                                "House Owner - Person who owns a house",
-                                style: TextStyle(
-                                  color: Colors.white60,
-                                  fontSize: 14,
-                                  fontFamily: "sfproRoundRegular",
-                                ),
-                              ),
-                              SizedBox(height: 6),
-                            ],
+                          const Text(
+                            "Driver → Operates garbage collection vehicles.\nHouse Owner → Resident registering for pickups.",
+                            style: TextStyle(
+                              color: Colors.white60,
+                              fontSize: 14,
+                              height: 1.4,
+                              fontFamily: "sfproRoundRegular",
+                            ),
+                            textAlign: TextAlign.center,
                           ),
                         ],
                       ),
@@ -294,57 +312,43 @@ class _UseridentifierState extends State<Useridentifier>
 
                     const SizedBox(height: 80),
 
-                    // 🌈 Next button (glowing gradient)
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: GestureDetector(
-                        onTap: () {
-                          String selected = _roles[_selectedRole];
-                          if (selected == 'Driver') {
-                            // Navigator.push(
-                            //   context,
-                            //   MaterialPageRoute(builder: (_) => DriReg()),
-                            // );
-                          } else if (selected == 'House Owner') {
-                            // Navigator.push(
-                            //   context,
-                            //   MaterialPageRoute(builder: (_) => HOwnerReg()),
-                            // );
-                          }
-                        },
-                        child: TweenAnimationBuilder(
-                          tween: Tween<double>(begin: 0, end: 1),
-                          duration: const Duration(milliseconds: 1200),
-                          curve: Curves.easeInOutCubic,
-                          builder: (context, value, child) {
-                            return Transform.scale(
-                              scale: 0.9 + (0.1 * value),
-                              child: child,
-                            );
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFF00C6FF), Color(0xFF0072FF)],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.blueAccent.withOpacity(0.5),
-                                  blurRadius: 15,
-                                  offset: const Offset(0, 5),
-                                ),
-                              ],
-                            ),
-                            child: const Icon(
-                              Iconsax.arrow_right_3,
-                              color: Colors.white,
-                              size: 32,
-                            ),
+                    // 🚀 Next Button
+                    GestureDetector(
+                      onTap: () {
+                        String selected = _roles[_selectedRole];
+                        if (selected == 'Driver') {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => DriReg()),
+                          );
+                        } else if (selected == 'House Owner') {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => HOwnerReg()),
+                          );
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF00C6FF), Color(0xFF0072FF)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
                           ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.blueAccent.withOpacity(0.5),
+                              blurRadius: 20,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Iconsax.arrow_right_3,
+                          color: Colors.white,
+                          size: 36,
                         ),
                       ),
                     ),

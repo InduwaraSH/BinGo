@@ -1,387 +1,825 @@
-// import 'package:firebase_database/firebase_database.dart';
-// import 'package:flutter/cupertino.dart';
-// import 'package:flutter/material.dart';
-// import 'package:iconsax/iconsax.dart';
-// import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
+import 'dart:math';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/material.dart';
+import 'package:iconsax/iconsax.dart';
+import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 
-// class DriReg extends StatefulWidget {
-//   const DriReg({super.key});
+class DriReg extends StatefulWidget {
+  const DriReg({super.key});
 
-//   @override
-//   State<DriReg> createState() => _DriRegState();
-// }
+  @override
+  State<DriReg> createState() => _DriRegState();
+}
 
-// class _DriRegState extends State<DriReg> {
-//   int _selectedTown = 0;
-//   TextEditingController usernameController = TextEditingController();
-//   TextEditingController passwordController = TextEditingController();
-//   TextEditingController nicController = TextEditingController();
-//   TextEditingController mobileController = TextEditingController();
-//   TextEditingController idController = TextEditingController();
-//   TextEditingController passwordReController = TextEditingController();
+class _DriRegState extends State<DriReg> with TickerProviderStateMixin {
+  late AnimationController _circleController;
+  late Animation<double> _circlePulse;
+  late Animation<Offset> _circleMove1;
+  late Animation<Offset> _circleMove2;
 
-//   late DatabaseReference employeeReference;
+  late AnimationController _pageController;
+  late Animation<double> _fadeAnim;
+  late Animation<Offset> _slideAnim;
 
-//   static const List<String> _townName = <String>[
-//     'Embilipitiya',
-//     'Matara',
-//     'Colombo',
-//     'Ratnapura',
-//     'Galle',
-//     "Hambantota",
-//     "Tangalle",
-//     "Weligama",
-//     "Ahangama",
-//     "Kamburupitiya",
-//     "Akuressa",
-//     "Deniyaya",
-//     'Jaffna',
-//   ];
+  late DatabaseReference personReference;
 
-//   @override
-//   void initState() {
-//     super.initState();
-//     employeeReference = FirebaseDatabase.instance.ref().child("employees");
-//   }
+  bool _isSubmitting = false;
 
-//   void _showTownPicker() {
-//     showCupertinoModalPopup<void>(
-//       context: context,
-//       builder: (BuildContext context) => Container(
-//         height: 250,
-//         color: Colors.white,
-//         child: CupertinoPicker(
-//           backgroundColor: Colors.white,
-//           itemExtent: 40,
-//           scrollController: FixedExtentScrollController(
-//             initialItem: _selectedTown,
-//           ),
-//           onSelectedItemChanged: (int index) {
-//             setState(() {
-//               _selectedTown = index;
-//             });
-//           },
-//           children: _townName
-//               .map(
-//                 (town) => Center(
-//                   child: Text(
-//                     town,
-//                     style: const TextStyle(
-//                       fontFamily: "sfproRoundRegular",
-//                       fontSize: 20,
-//                     ),
-//                   ),
-//                 ),
-//               )
-//               .toList(),
-//         ),
-//       ),
-//     );
-//   }
+  // Text controllers
+  final TextEditingController idController = TextEditingController();
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController nicController = TextEditingController();
+  final TextEditingController mobileController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController rePasswordController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController addressController = TextEditingController();
 
-//   @override
-//   Widget build(BuildContext context) {
-//     Size size = MediaQuery.of(context).size;
+  @override
+  void initState() {
+    super.initState();
+    personReference = FirebaseDatabase.instance.ref().child("Persons");
 
-//     return Scaffold(
-//       extendBody: true,
-//       backgroundColor: const Color(0xFF0D1117),
-//       body: Stack(
-//         children: [
-//           // Gradient Background
-//           Container(
-//             decoration: const BoxDecoration(
-//               gradient: LinearGradient(
-//                 colors: [Color(0xFF111827), Color(0xFF1F2937)],
-//                 begin: Alignment.topLeft,
-//                 end: Alignment.bottomRight,
-//               ),
-//             ),
-//           ),
+    // Background animations
+    _circleController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 5),
+    )..repeat(reverse: true);
 
-//           // Top Accent Circle
-//           Positioned(
-//             top: -60,
-//             right: -60,
-//             child: Container(
-//               width: 200,
-//               height: 200,
-//               decoration: BoxDecoration(
-//                 shape: BoxShape.circle,
-//                 gradient: LinearGradient(
-//                   colors: [Colors.blue.shade400, Colors.cyanAccent.shade100],
-//                   begin: Alignment.topLeft,
-//                   end: Alignment.bottomRight,
-//                 ),
-//               ),
-//             ),
-//           ),
+    _circlePulse = Tween<double>(begin: 0.95, end: 1.15).animate(
+      CurvedAnimation(parent: _circleController, curve: Curves.easeInOut),
+    );
 
-//           // Main Content
-//           SafeArea(
-//             child: SingleChildScrollView(
-//               physics: const BouncingScrollPhysics(),
-//               padding: const EdgeInsets.symmetric(
-//                 horizontal: 24.0,
-//                 vertical: 20.0,
-//               ),
-//               child: Column(
-//                 crossAxisAlignment: CrossAxisAlignment.center,
-//                 children: [
-//                   // Back button
-//                   Align(
-//                     alignment: Alignment.topLeft,
-//                     child: GestureDetector(
-//                       onTap: () => Navigator.pop(context),
-//                       child: Container(
-//                         padding: const EdgeInsets.all(10),
-//                         decoration: BoxDecoration(
-//                           shape: BoxShape.circle,
-//                           color: Colors.white.withOpacity(0.1),
-//                           border: Border.all(color: Colors.white24),
-//                         ),
-//                         child: const Icon(
-//                           Iconsax.arrow_left,
-//                           color: Colors.white,
-//                           size: 24,
-//                         ),
-//                       ),
-//                     ),
-//                   ),
+    _circleMove1 =
+        Tween<Offset>(
+          begin: Offset.zero,
+          end: const Offset(0.05, -0.09),
+        ).animate(
+          CurvedAnimation(parent: _circleController, curve: Curves.easeInOut),
+        );
 
-//                   const SizedBox(height: 20),
+    _circleMove2 =
+        Tween<Offset>(
+          begin: Offset.zero,
+          end: const Offset(-0.05, 0.09),
+        ).animate(
+          CurvedAnimation(parent: _circleController, curve: Curves.easeInOut),
+        );
 
-//                   // Title
-//                   const Text(
-//                     "RM Registration",
-//                     style: TextStyle(
-//                       fontSize: 36,
-//                       fontWeight: FontWeight.bold,
-//                       color: Colors.white,
-//                       fontFamily: "sfProRoundSemiB",
-//                     ),
-//                   ),
-//                   const SizedBox(height: 8),
-//                   const Text(
-//                     "Provide accurate details for verification",
-//                     textAlign: TextAlign.center,
-//                     style: TextStyle(
-//                       color: Colors.white60,
-//                       fontSize: 16,
-//                       fontFamily: "sfproRoundRegular",
-//                     ),
-//                   ),
+    // Page animation
+    _pageController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 700),
+    );
 
-//                   const SizedBox(height: 35),
+    _fadeAnim = CurvedAnimation(
+      parent: _pageController,
+      curve: Curves.easeInOutCubic,
+    );
 
-//                   // Form Fields
-//                   _buildTextField(
-//                     idController,
-//                     "Enter Your ID Number",
-//                     Iconsax.card,
-//                   ),
-//                   const SizedBox(height: 20),
+    _slideAnim = Tween<Offset>(
+      begin: const Offset(0, 0.08),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _pageController, curve: Curves.easeOut));
 
-//                   _buildTextField(
-//                     usernameController,
-//                     "Enter Your Name",
-//                     Iconsax.user,
-//                   ),
-//                   const SizedBox(height: 20),
+    _pageController.forward();
+  }
 
-//                   _buildTextField(
-//                     nicController,
-//                     "Enter Your NIC Number",
-//                     Iconsax.user,
-//                   ),
-//                   const SizedBox(height: 20),
+  @override
+  void dispose() {
+    _circleController.dispose();
+    _pageController.dispose();
+    idController.dispose();
+    nameController.dispose();
+    nicController.dispose();
+    mobileController.dispose();
+    passwordController.dispose();
+    rePasswordController.dispose();
+    emailController.dispose();
+    addressController.dispose();
+    super.dispose();
+  }
 
-//                   _buildTextField(
-//                     mobileController,
-//                     "Enter Your Mobile Number",
-//                     Iconsax.call,
-//                     inputType: TextInputType.phone,
-//                   ),
-//                   const SizedBox(height: 20),
+  // ------------------ Logic ------------------
+  Future<void> _submitData() async {
+    setState(() => _isSubmitting = true);
 
-//                   // Town Picker
-//                   Container(
-//                     decoration: BoxDecoration(
-//                       color: Colors.white.withOpacity(0.1),
-//                       borderRadius: BorderRadius.circular(18),
-//                       border: Border.all(color: Colors.white.withOpacity(0.2)),
-//                     ),
-//                     child: ListTile(
-//                       onTap: _showTownPicker,
-//                       leading: const Icon(
-//                         Iconsax.location,
-//                         color: Colors.white70,
-//                       ),
-//                       title: Text(
-//                         _townName[_selectedTown],
-//                         style: const TextStyle(
-//                           color: Colors.white,
-//                           fontSize: 16,
-//                           fontFamily: "sfproRoundRegular",
-//                         ),
-//                       ),
-//                       trailing: const Icon(
-//                         Iconsax.arrow_down_1,
-//                         color: Colors.white70,
-//                       ),
-//                     ),
-//                   ),
-//                   const SizedBox(height: 20),
+    bool result = await InternetConnection().hasInternetAccess;
+    if (!result) {
+      _showSnack('No internet connection', Colors.grey);
+      setState(() => _isSubmitting = false);
+      return;
+    }
 
-//                   _buildTextField(
-//                     passwordController,
-//                     "Enter Your Password",
-//                     Iconsax.lock,
-//                     obscure: true,
-//                   ),
-//                   const SizedBox(height: 20),
+    if (idController.text.isEmpty ||
+        nameController.text.isEmpty ||
+        mobileController.text.isEmpty ||
+        nicController.text.isEmpty ||
+        addressController.text.isEmpty ||
+        passwordController.text.isEmpty ||
+        emailController.text.isEmpty ||
+        rePasswordController.text.isEmpty ||
+        passwordController.text != rePasswordController.text) {
+      _showSnack('Please fill all fields correctly', Colors.red);
+      setState(() => _isSubmitting = false);
+      return;
+    }
 
-//                   _buildTextField(
-//                     passwordReController,
-//                     "Re-enter Password",
-//                     Iconsax.lock_1,
-//                     obscure: true,
-//                   ),
+    Map<String, String> driverData = {
+      "Id": idController.text,
+      "Name": nameController.text,
+      "Mobile": mobileController.text,
+      "Type": "Driver",
+      "Mail": emailController.text,
+      "Address": addressController.text,
+      "Password": passwordController.text,
+    };
 
-//                   const SizedBox(height: 40),
+    try {
+      await personReference.child(emailController.text).set(driverData);
+      _showSnack(
+        '${nameController.text} Registration Request Sent Successfully',
+        Colors.green,
+      );
 
-//                   // Submit Button
-//                   GestureDetector(
-//                     onTap: _submitForm,
-//                     child: Container(
-//                       width: double.infinity,
-//                       padding: const EdgeInsets.symmetric(vertical: 18),
-//                       decoration: BoxDecoration(
-//                         gradient: const LinearGradient(
-//                           colors: [Color(0xFF00C6FF), Color(0xFF0072FF)],
-//                           begin: Alignment.topLeft,
-//                           end: Alignment.bottomRight,
-//                         ),
-//                         borderRadius: BorderRadius.circular(20),
-//                         boxShadow: [
-//                           BoxShadow(
-//                             color: Colors.blueAccent.withOpacity(0.4),
-//                             blurRadius: 20,
-//                             offset: const Offset(0, 8),
-//                           ),
-//                         ],
-//                       ),
-//                       child: const Center(
-//                         child: Text(
-//                           "Submit Registration",
-//                           style: TextStyle(
-//                             color: Colors.white,
-//                             fontSize: 18,
-//                             fontWeight: FontWeight.bold,
-//                             letterSpacing: 0.5,
-//                             fontFamily: "sfProRoundSemiB",
-//                           ),
-//                         ),
-//                       ),
-//                     ),
-//                   ),
+      idController.clear();
+      nameController.clear();
+      nicController.clear();
+      mobileController.clear();
+      passwordController.clear();
+      rePasswordController.clear();
+      emailController.clear();
+      addressController.clear();
+    } catch (error) {
+      _showSnack("Failed to save data: $error", Colors.redAccent);
+    } finally {
+      setState(() => _isSubmitting = false);
+    }
+  }
 
-//                   const SizedBox(height: 50),
-//                 ],
-//               ),
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
+  // ------------------ Snackbar UI ------------------
+  void _showSnack(String msg, Color color) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        content: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [const Color(0xFF00B4FF), const Color(0xFF6DD3FF)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(14),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.35),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              Icon(
+                color == Colors.green
+                    ? Icons.check_circle
+                    : color == Colors.red
+                    ? Icons.error
+                    : Icons.info,
+                color: Colors.white,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  msg,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
-//   // 🔹 Custom reusable TextField builder
-//   Widget _buildTextField(
-//     TextEditingController controller,
-//     String hint,
-//     IconData icon, {
-//     bool obscure = false,
-//     TextInputType? inputType,
-//   }) {
-//     return Container(
-//       decoration: BoxDecoration(
-//         color: Colors.white.withOpacity(0.1),
-//         borderRadius: BorderRadius.circular(18),
-//         border: Border.all(color: Colors.white.withOpacity(0.2)),
-//       ),
-//       child: TextField(
-//         controller: controller,
-//         obscureText: obscure,
-//         keyboardType: inputType ?? TextInputType.text,
-//         style: const TextStyle(
-//           color: Colors.white,
-//           fontFamily: "sfproRoundRegular",
-//         ),
-//         decoration: InputDecoration(
-//           prefixIcon: Icon(icon, color: Colors.white70),
-//           border: InputBorder.none,
-//           hintText: hint,
-//           hintStyle: const TextStyle(color: Colors.white54),
-//           contentPadding: const EdgeInsets.symmetric(
-//             horizontal: 20,
-//             vertical: 18,
-//           ),
-//         ),
-//       ),
-//     );
-//   }
+  // ------------------ UI ------------------
+  @override
+  Widget build(BuildContext context) {
+    final themeAccent = LinearGradient(
+      colors: [const Color(0xFF00B4FF), const Color(0xFF6DD3FF)],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    );
 
-//   // 🔹 Submit logic (same functionality)
-//   Future<void> _submitForm() async {
-//     bool result = await InternetConnection().hasInternetAccess;
+    return Scaffold(
+      backgroundColor: const Color(0xFF07121A),
+      body: FadeTransition(
+        opacity: _fadeAnim,
+        child: SlideTransition(
+          position: _slideAnim,
+          child: Stack(
+            children: [
+              // Tech background
+              Positioned.fill(child: _buildTechBackground()),
 
-//     if (!result) {
-//       _showSnack('No internet connection', Colors.grey);
-//       return;
-//     }
+              // Animated glowing circles
+              _buildAnimatedBackground(),
 
-//     if (idController.text.isEmpty ||
-//         usernameController.text.isEmpty ||
-//         mobileController.text.isEmpty ||
-//         nicController.text.isEmpty ||
-//         passwordController.text.isEmpty ||
-//         passwordReController.text.isEmpty ||
-//         passwordController.text != passwordReController.text) {
-//       _showSnack('Please fill all fields correctly', Colors.red);
-//       return;
-//     }
+              SafeArea(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 20,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Top bar
+                      Row(
+                        children: [
+                          GestureDetector(
+                            onTap: () => Navigator.pop(context),
+                            child: Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.06),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(
+                                Icons.arrow_back_ios_new_rounded,
+                                color: Colors.white,
+                                size: 18,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              gradient: themeAccent,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.6),
+                                  offset: const Offset(0, 6),
+                                  blurRadius: 12,
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Iconsax.truck,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: const [
+                                    Text(
+                                      'BinGo',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    SizedBox(height: 2),
+                                    Text(
+                                      'Driver',
+                                      style: TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: 11,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 28),
 
-//     Map<String, String> employeeData = {
-//       "employeeId": idController.text,
-//       "employeeName": usernameController.text,
-//       "employeeMobile": mobileController.text,
-//       "employeePosition": "RM",
-//       "employeeLocation": _townName[_selectedTown],
-//       "employeePassword": passwordController.text,
-//     };
+                      // Header card
+                      _headerCard(),
+                      const SizedBox(height: 18),
 
-//     employeeReference
-//         .child(idController.text)
-//         .set(employeeData)
-//         .then((_) {
-//           _showSnack(
-//             '${usernameController.text} Registration Request Sent Successfully',
-//             Colors.green,
-//           );
-//         })
-//         .catchError((error) {
-//           _showSnack("Failed to save data: $error", Colors.redAccent);
-//         });
-//   }
+                      // Form
+                      Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.03),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.06),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.5),
+                              blurRadius: 30,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 18,
+                          vertical: 18,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: const [
+                                Icon(
+                                  Iconsax.profile_2user,
+                                  color: Color(0xFF8EE7FF),
+                                  size: 18,
+                                ),
+                                SizedBox(width: 10),
+                                Text(
+                                  'Driver Details',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
 
-//   void _showSnack(String message, Color color) {
-//     ScaffoldMessenger.of(context).showSnackBar(
-//       SnackBar(
-//         content: Text(message, style: const TextStyle(color: Colors.white)),
-//         duration: const Duration(seconds: 4),
-//         backgroundColor: color,
-//       ),
-//     );
-//   }
-// }
+                            _buildLabeledField(
+                              'Job ID',
+                              'E.g. D-125',
+                              Iconsax.card,
+                              idController,
+                            ),
+                            _buildLabeledField(
+                              'Email',
+                              'driver@example.com',
+                              Icons.mail_outline,
+                              emailController,
+                            ),
+                            _buildLabeledField(
+                              'Address',
+                              'Street, City, ZIP',
+                              Iconsax.location,
+                              addressController,
+                              maxLines: 2,
+                            ),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _buildLabeledField(
+                                    'Full Name',
+                                    'John Doe',
+                                    Iconsax.user,
+                                    nameController,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: _buildLabeledField(
+                                    'NIC',
+                                    '123456789V',
+                                    Iconsax.personalcard,
+                                    nicController,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            _buildLabeledField(
+                              'Mobile',
+                              '+94 7x xxx xxxx',
+                              Iconsax.call,
+                              mobileController,
+                              keyboardType: TextInputType.phone,
+                            ),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _buildLabeledField(
+                                    'Password',
+                                    '••••••••',
+                                    Iconsax.lock,
+                                    passwordController,
+                                    isPassword: true,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: _buildLabeledField(
+                                    'Confirm',
+                                    '••••••••',
+                                    Iconsax.lock,
+                                    rePasswordController,
+                                    isPassword: true,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+
+                            Center(
+                              child: GestureDetector(
+                                onTap: _isSubmitting ? null : _submitData,
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 300),
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 16,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    gradient: themeAccent,
+                                    borderRadius: BorderRadius.circular(14),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: const Color(
+                                          0xFF00B4FF,
+                                        ).withOpacity(0.18),
+                                        blurRadius: 20,
+                                        offset: const Offset(0, 8),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Center(
+                                    child: _isSubmitting
+                                        ? Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: const [
+                                              SizedBox(
+                                                width: 20,
+                                                height: 20,
+                                                child:
+                                                    CircularProgressIndicator(
+                                                      color: Colors.white,
+                                                      strokeWidth: 2.5,
+                                                    ),
+                                              ),
+                                              SizedBox(width: 12),
+                                              Text(
+                                                'Submitting...',
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                            ],
+                                          )
+                                        : const Text(
+                                            'Send Registration Request',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 15,
+                                            ),
+                                          ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 26),
+                      Row(
+                        children: const [
+                          Icon(
+                            Iconsax.info_circle,
+                            color: Colors.white30,
+                            size: 16,
+                          ),
+                          SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Your details will be verified by admin. Keep information accurate.',
+                              style: TextStyle(color: Colors.white38),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 60),
+                    ],
+                  ),
+                ),
+              ),
+
+              if (_isSubmitting)
+                Container(
+                  color: Colors.black.withOpacity(0.55),
+                  child: Center(
+                    child: FadeTransition(
+                      opacity: _fadeAnim,
+                      child: ScaleTransition(
+                        scale: Tween<double>(begin: 1.2, end: 1.0).animate(
+                          CurvedAnimation(
+                            parent: _pageController,
+                            curve: Curves.easeOutBack,
+                          ),
+                        ),
+                        child: Container(
+                          width: 140,
+                          height: 140,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: RadialGradient(
+                              colors: [
+                                const Color(0xFF00B4FF).withOpacity(0.18),
+                                Colors.transparent,
+                              ],
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(
+                                  0xFF00B4FF,
+                                ).withOpacity(0.35),
+                                blurRadius: 40,
+                                spreadRadius: 20,
+                              ),
+                            ],
+                          ),
+                          child: Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: const [
+                                SizedBox(
+                                  width: 34,
+                                  height: 34,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 3,
+                                    color: Color(0xFF6DD3FF),
+                                  ),
+                                ),
+                                SizedBox(height: 8),
+                                Text(
+                                  'Verifying...',
+                                  style: TextStyle(
+                                    color: Colors.white70,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ------------------ UI Helpers ------------------
+  Widget _buildTechBackground() {
+    return CustomPaint(
+      painter: _GridPainter(),
+      child: Container(color: Colors.transparent),
+    );
+  }
+
+  Widget _buildAnimatedBackground() {
+    return AnimatedBuilder(
+      animation: _circleController,
+      builder: (context, child) {
+        return Stack(
+          children: [
+            Align(
+              alignment: Alignment.topRight,
+              child: Transform.translate(
+                offset: Offset(
+                  90 * _circleMove1.value.dx,
+                  70 * _circleMove1.value.dy,
+                ),
+                child: Transform.scale(
+                  scale: _circlePulse.value,
+                  child: Container(
+                    width: 260,
+                    height: 260,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors: [
+                          const Color(0xFF0E5AA7).withOpacity(0.18),
+                          const Color(0xFF00B4FF).withOpacity(0.06),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF00B4FF).withOpacity(0.12),
+                          blurRadius: 60,
+                          spreadRadius: 30,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Align(
+              alignment: Alignment.bottomLeft,
+              child: Transform.translate(
+                offset: Offset(
+                  -50 * _circleMove2.value.dx,
+                  -40 * _circleMove2.value.dy,
+                ),
+                child: Transform.scale(
+                  scale: _circlePulse.value,
+                  child: Container(
+                    width: 320,
+                    height: 320,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors: [
+                          const Color(0xFF6A0FA6).withOpacity(0.08),
+                          const Color(0xFF00B4FF).withOpacity(0.06),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF6A0FA6).withOpacity(0.12),
+                          blurRadius: 80,
+                          spreadRadius: 40,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _headerCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.02),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white.withOpacity(0.04)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 68,
+            height: 68,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF00B4FF), Color(0xFF6DD3FF)],
+              ),
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.5),
+                  blurRadius: 10,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: const Icon(Iconsax.truck, color: Colors.white, size: 34),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                Text(
+                  'Register as Driver',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                SizedBox(height: 6),
+                Text(
+                  'Register once so admins can assign pickups. Your data is secure.',
+                  style: TextStyle(color: Colors.white60, fontSize: 13),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLabeledField(
+    String label,
+    String hint,
+    IconData icon,
+    TextEditingController controller, {
+    bool isPassword = false,
+    int maxLines = 1,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                '*',
+                style: TextStyle(color: Color(0xFF6DD3FF), fontSize: 12),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.02),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.white.withOpacity(0.04)),
+            ),
+            child: Row(
+              children: [
+                Icon(icon, color: Colors.white30, size: 18),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: TextField(
+                    controller: controller,
+                    obscureText: isPassword,
+                    maxLines: maxLines,
+                    keyboardType: keyboardType,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      hintText: hint,
+                      hintStyle: TextStyle(
+                        color: Colors.white.withOpacity(0.35),
+                      ),
+                      border: InputBorder.none,
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Custom painter
+class _GridPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..color = Colors.white.withOpacity(0.02);
+    final step = 28.0;
+    for (double x = 0; x < size.width; x += step)
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
+    for (double y = 0; y < size.height; y += step)
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+
+    final paint2 = Paint()..color = Colors.white.withOpacity(0.008);
+    for (double x = -size.height; x < size.width; x += 56) {
+      canvas.drawLine(
+        Offset(x, 0),
+        Offset(x + size.height, size.height),
+        paint2,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}

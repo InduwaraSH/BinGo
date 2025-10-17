@@ -1,5 +1,6 @@
+import 'dart:math';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
@@ -11,693 +12,826 @@ class HOwnerReg extends StatefulWidget {
   State<HOwnerReg> createState() => _HOwnerRegState();
 }
 
-class _HOwnerRegState extends State<HOwnerReg> {
-  int _selectedTown = 0;
-  TextEditingController usernameController = TextEditingController();
-  TextEditingController passwordController = TextEditingController();
-  TextEditingController nicController = TextEditingController();
-  TextEditingController mobileController = TextEditingController();
-  TextEditingController idController = TextEditingController();
-  TextEditingController passwordReController = TextEditingController();
+class _HOwnerRegState extends State<HOwnerReg> with TickerProviderStateMixin {
+  late AnimationController _circleController;
+  late Animation<double> _circlePulse;
+  late Animation<Offset> _circleMove1;
+  late Animation<Offset> _circleMove2;
 
-  late DatabaseReference branchReference;
-  late DatabaseReference employeeReference;
+  late AnimationController _pageController;
+  late Animation<double> _fadeAnim;
+  late Animation<Offset> _slideAnim;
 
-  static const double _kItemExtent = 32.0;
-  static const List<String> _townName = <String>[
-    'Embilipitya',
-    'Matara',
-    'Colombo',
-    'Ratnapura',
-    'Galle',
-    "Hambantota",
-    "Tangalle",
-    "Weligama",
-    "Ahangama",
-    "Kamburupitiya",
-    "Akuressa",
-    "Deniyaya",
-    'Jaffna',
-  ];
+  late DatabaseReference personReference_new;
+  late DatabaseReference houseOwnerProfileRef;
+
+  bool _isSubmitting = false; // 🔹 progress state
+
+  // Text controllers (kept same)
+  final TextEditingController idController = TextEditingController();
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController nicController = TextEditingController();
+  final TextEditingController mobileController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController rePasswordController = TextEditingController();
+  final TextEditingController addressController = TextEditingController();
+  final TextEditingController mailController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
+    personReference_new = FirebaseDatabase.instance.ref().child("Persons");
+    houseOwnerProfileRef = FirebaseDatabase.instance.ref().child(
+      "House_Owner_Profiles",
+    );
 
-    employeeReference = FirebaseDatabase.instance.ref().child("employees");
+    // Background animation setup (unchanged)
+    _circleController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 5),
+    )..repeat(reverse: true);
+
+    _circlePulse = Tween<double>(begin: 0.95, end: 1.15).animate(
+      CurvedAnimation(parent: _circleController, curve: Curves.easeInOut),
+    );
+
+    _circleMove1 =
+        Tween<Offset>(
+          begin: Offset.zero,
+          end: const Offset(0.05, -0.09),
+        ).animate(
+          CurvedAnimation(parent: _circleController, curve: Curves.easeInOut),
+        );
+
+    _circleMove2 =
+        Tween<Offset>(
+          begin: Offset.zero,
+          end: const Offset(-0.05, 0.09),
+        ).animate(
+          CurvedAnimation(parent: _circleController, curve: Curves.easeInOut),
+        );
+
+    // Page entry animation (unchanged)
+    _pageController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 700),
+    );
+
+    _fadeAnim = CurvedAnimation(
+      parent: _pageController,
+      curve: Curves.easeInOutCubic,
+    );
+    _slideAnim = Tween<Offset>(
+      begin: const Offset(0, 0.08),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _pageController, curve: Curves.easeOut));
+
+    _pageController.forward();
   }
 
-  void _showDialog(Widget child) {
-    showCupertinoModalPopup<void>(
-      context: context,
-      builder: (BuildContext context) => Container(
-        height: 216,
-        padding: const EdgeInsets.only(top: 6.0),
-        margin: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
+  @override
+  void dispose() {
+    _circleController.dispose();
+    _pageController.dispose();
+    idController.dispose();
+    nameController.dispose();
+    nicController.dispose();
+    mobileController.dispose();
+    passwordController.dispose();
+    rePasswordController.dispose();
+    addressController.dispose();
+    mailController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submitData() async {
+    setState(() => _isSubmitting = true);
+
+    bool result = await InternetConnection().hasInternetAccess;
+    if (!result) {
+      _showSnack('No internet connection', Colors.grey);
+      setState(() => _isSubmitting = false);
+      return;
+    }
+
+    if (idController.text.isEmpty ||
+        nameController.text.isEmpty ||
+        mobileController.text.isEmpty ||
+        nicController.text.isEmpty ||
+        passwordController.text.isEmpty ||
+        addressController.text.isEmpty ||
+        rePasswordController.text.isEmpty ||
+        passwordController.text != rePasswordController.text) {
+      _showSnack('Please fill all fields correctly', Colors.red);
+      setState(() => _isSubmitting = false);
+      return;
+    }
+
+    Map<String, String> employeeData = {
+      "Name": nameController.text,
+      "Type": "House_Owner",
+      "Mail": mailController.text,
+    };
+
+    try {
+      UserCredential userCred = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(
+            email: mailController.text.trim(),
+            password: passwordController.text,
+          );
+
+      String safeEmail = mailController.text.trim().replaceAll('.', '_');
+
+      await personReference_new.child(safeEmail).set(employeeData);
+      await houseOwnerProfileRef
+          .child("House_Profile")
+          .child(safeEmail)
+          .child("Profile_Info")
+          .set({
+            "Owner_Name": nameController.text.trim(),
+            "Owner_Mobile": mobileController.text.trim(),
+            "Owner_NIC": nicController.text.trim(),
+            "Owner_Email": mailController.text.trim(),
+            "Owner_Address": addressController.text.trim().replaceAll('/', '_'),
+            "Registered_House_ID": idController.text.trim().replaceAll(
+              '/',
+              '_',
+            ),
+          });
+
+      _showSnack(
+        '${nameController.text} Registration Request Sent Successfully',
+        Colors.green,
+      );
+
+      // Clear inputs
+      [
+        idController,
+        nameController,
+        mobileController,
+        nicController,
+        passwordController,
+        rePasswordController,
+        addressController,
+        mailController,
+      ].forEach((c) => c.clear());
+    } on FirebaseAuthException catch (e) {
+      _showSnack('Error: ${e.message}', Colors.red);
+    } catch (e) {
+      _showSnack('Something went wrong', Colors.red);
+    } finally {
+      setState(() => _isSubmitting = false);
+    }
+  }
+
+  // 🔹 Updated Snackbar design
+  void _showSnack(String msg, Color color) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        padding: const EdgeInsets.all(0),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        content: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [const Color(0xFF00B4FF), const Color(0xFF6DD3FF)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(14),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.35),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              Icon(
+                color == Colors.green
+                    ? Icons.check_circle
+                    : color == Colors.red
+                    ? Icons.error
+                    : Icons.info,
+                color: Colors.white,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  msg,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
-        color: CupertinoColors.systemBackground.resolveFrom(context),
-        child: SafeArea(top: false, child: child),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    Size size = MediaQuery.of(context).size;
+    final themeAccent = LinearGradient(
+      colors: [const Color(0xFF00B4FF), const Color(0xFF6DD3FF)],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    );
+
     return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    height: 250,
-                    width: size.width - 30,
-
-                    decoration: BoxDecoration(
-                      color: Colors.blue.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Column(
-                      children: [
-                        SizedBox(height: 20),
-                        Icon(Iconsax.user_add, size: 50, color: Colors.blue),
-                        Center(
-                          child: Text(
-                            "RM Registration",
-                            style: TextStyle(
-                              fontFamily: "sfproRoundSemiB",
-                              fontSize: 35,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.blue,
+      backgroundColor: const Color(0xFF07121A),
+      body: FadeTransition(
+        opacity: _fadeAnim,
+        child: SlideTransition(
+          position: _slideAnim,
+          child: Stack(
+            children: [
+              Positioned.fill(child: _buildTechBackground()),
+              _buildAnimatedBackground(),
+              SafeArea(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 20,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          GestureDetector(
+                            onTap: () => Navigator.pop(context),
+                            child: Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.06),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(
+                                Icons.arrow_back_ios_new_rounded,
+                                color: Colors.white,
+                                size: 18,
+                              ),
                             ),
-                            textAlign: TextAlign.center,
                           ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(left: 30, right: 30),
-                          child: Text(
-                            "Please complete your registration by providing accurate details. Submitted information will be reviewed by the administration, and once verified, your account will be approved. Thank you for your trust.",
-                            style: TextStyle(
-                              fontFamily: "sfproRoundRegular",
-                              fontSize: 15,
-                              color: Colors.blue[300],
+                          const SizedBox(width: 14),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
                             ),
-                            textAlign: TextAlign.center,
+                            decoration: BoxDecoration(
+                              gradient: themeAccent,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.6),
+                                  offset: const Offset(0, 6),
+                                  blurRadius: 12,
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Iconsax.cloud_sunny,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: const [
+                                    Text(
+                                      'BinGo',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    SizedBox(height: 2),
+                                    Text(
+                                      'House Owner',
+                                      style: TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: 11,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
+                        ],
+                      ),
+                      const SizedBox(height: 28),
+                      _headerCard(),
+                      const SizedBox(height: 18),
+                      Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.03),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.06),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.5),
+                              blurRadius: 30,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                SizedBox(height: 20),
-
-                /// Enter Your Id Number
-                Padding(
-                  padding: EdgeInsets.only(bottom: 8.0, left: 5),
-                  child: Text(
-                    "Enter Your Id Number",
-                    style: TextStyle(
-                      fontFamily: "sfproRoundSemiB",
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-                TextFormField(
-                  controller: idController,
-                  style: TextStyle(
-                    color: Colors.black, // text color
-                    fontFamily: "sfproRoundRegular", // your custom font
-                    fontSize: 16, // text size
-                    fontWeight: FontWeight.w600,
-                  ),
-                  decoration: InputDecoration(
-                    labelText: "ID Number",
-                    hintText: "Enter your ID Number",
-                    labelStyle: TextStyle(
-                      color: Colors.grey,
-                      fontFamily: "sfproRoundRegular",
-                      fontWeight: FontWeight.bold,
-                    ),
-                    hintStyle: TextStyle(
-                      color: Colors.grey.shade400,
-                      fontFamily: "sfproRoundRegular",
-                      fontWeight: FontWeight.bold,
-                    ),
-                    contentPadding: EdgeInsets.symmetric(
-                      vertical: 16,
-                      horizontal: 20,
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(
-                        30,
-                      ), // rounded corners
-                      borderSide: BorderSide(
-                        color: Colors.grey.shade400, // thin grey border
-                        width: 1.5,
-                      ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
-                      borderSide: BorderSide(
-                        color: Colors.black, // highlight color when focused
-                        width: 2,
-                      ),
-                    ),
-                    floatingLabelStyle: TextStyle(
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: "sfproRoundRegular",
-                    ),
-                  ),
-                ),
-                SizedBox(height: 20),
-
-                //Enter your name
-                Padding(
-                  padding: EdgeInsets.only(bottom: 8.0, left: 5),
-                  child: Text(
-                    "Enter Your Name",
-                    style: TextStyle(
-                      fontFamily: "sfproRoundSemiB",
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-                TextFormField(
-                  controller: usernameController,
-                  style: TextStyle(
-                    color: Colors.black, // text color
-                    fontFamily: "sfproRoundRegular", // your custom font
-                    fontSize: 16, // text size
-                    fontWeight: FontWeight.w600,
-                  ),
-                  decoration: InputDecoration(
-                    labelText: "Name",
-                    hintText: "Enter your Name",
-                    labelStyle: TextStyle(
-                      color: Colors.grey,
-                      fontFamily: "sfproRoundRegular",
-                      fontWeight: FontWeight.bold,
-                    ),
-                    hintStyle: TextStyle(
-                      color: Colors.grey.shade400,
-                      fontFamily: "sfproRoundRegular",
-                      fontWeight: FontWeight.bold,
-                    ),
-                    contentPadding: EdgeInsets.symmetric(
-                      vertical: 16,
-                      horizontal: 20,
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(
-                        30,
-                      ), // rounded corners
-                      borderSide: BorderSide(
-                        color: Colors.grey.shade400, // thin grey border
-                        width: 1.5,
-                      ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
-                      borderSide: BorderSide(
-                        color: Colors.black, // highlight color when focused
-                        width: 2,
-                      ),
-                    ),
-                    floatingLabelStyle: TextStyle(
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: "sfproRoundRegular",
-                    ),
-                  ),
-                ),
-
-                SizedBox(height: 20),
-
-                //Enter your nic number
-                Padding(
-                  padding: EdgeInsets.only(bottom: 8.0, left: 5),
-                  child: Text(
-                    "Enter Your NIC Number",
-                    style: TextStyle(
-                      fontFamily: "sfproRoundSemiB",
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-                TextFormField(
-                  controller: nicController,
-                  style: TextStyle(
-                    color: Colors.black, // text color
-                    fontFamily: "sfproRoundRegular", // your custom font
-                    fontSize: 16, // text size
-                    fontWeight: FontWeight.w600,
-                  ),
-                  decoration: InputDecoration(
-                    labelText: "NIC Number",
-                    hintText: "Enter your NIC Number",
-                    labelStyle: TextStyle(
-                      color: Colors.grey,
-                      fontFamily: "sfproRoundRegular",
-                      fontWeight: FontWeight.bold,
-                    ),
-                    hintStyle: TextStyle(
-                      color: Colors.grey.shade400,
-                      fontFamily: "sfproRoundRegular",
-                      fontWeight: FontWeight.bold,
-                    ),
-                    contentPadding: EdgeInsets.symmetric(
-                      vertical: 16,
-                      horizontal: 20,
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(
-                        30,
-                      ), // rounded corners
-                      borderSide: BorderSide(
-                        color: Colors.grey.shade400, // thin grey border
-                        width: 1.5,
-                      ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
-                      borderSide: BorderSide(
-                        color: Colors.black, // highlight color when focused
-                        width: 2,
-                      ),
-                    ),
-                    floatingLabelStyle: TextStyle(
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: "sfproRoundRegular",
-                    ),
-                  ),
-                ),
-
-                SizedBox(height: 20),
-
-                //Enter your mobile number
-                Padding(
-                  padding: EdgeInsets.only(bottom: 8.0, left: 5),
-                  child: Text(
-                    "Enter Your Mobile Number",
-                    style: TextStyle(
-                      fontFamily: "sfproRoundSemiB",
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-                TextFormField(
-                  controller: mobileController,
-                  style: TextStyle(
-                    color: Colors.black, // text color
-                    fontFamily: "sfproRoundRegular", // your custom font
-                    fontSize: 16, // text size
-                    fontWeight: FontWeight.w600,
-                  ),
-                  decoration: InputDecoration(
-                    labelText: "Mobile Number",
-                    hintText: "Enter your Mobile Number",
-                    labelStyle: TextStyle(
-                      color: Colors.grey,
-                      fontFamily: "sfproRoundRegular",
-                      fontWeight: FontWeight.bold,
-                    ),
-                    hintStyle: TextStyle(
-                      color: Colors.grey.shade400,
-                      fontFamily: "sfproRoundRegular",
-                      fontWeight: FontWeight.bold,
-                    ),
-                    contentPadding: EdgeInsets.symmetric(
-                      vertical: 16,
-                      horizontal: 20,
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(
-                        30,
-                      ), // rounded corners
-                      borderSide: BorderSide(
-                        color: Colors.grey.shade400, // thin grey border
-                        width: 1.5,
-                      ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
-                      borderSide: BorderSide(
-                        color: Colors.black, // highlight color when focused
-                        width: 2,
-                      ),
-                    ),
-                    floatingLabelStyle: TextStyle(
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: "sfproRoundRegular",
-                    ),
-                  ),
-                ),
-
-                SizedBox(height: 20),
-
-                //Enter your office name
-                Padding(
-                  padding: EdgeInsets.only(bottom: 8.0, left: 5),
-                  child: Text(
-                    "Enter Your Office location",
-                    style: TextStyle(
-                      fontFamily: "sfproRoundSemiB",
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(15.0),
-                  child: Center(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.grey.withOpacity(0.3),
-                        borderRadius: BorderRadius.circular(15.0),
-                      ),
-                      height: 50,
-                      width: size.width - 180,
-
-                      child: DefaultTextStyle(
-                        style: TextStyle(
-                          color: CupertinoColors.label.resolveFrom(context),
-                          fontSize: 22.0,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 18,
+                          vertical: 18,
                         ),
                         child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: <Widget>[
-                                CupertinoButton(
-                                  padding: EdgeInsets.zero,
-                                  // Display a CupertinoPicker with list of Stands.
-                                  onPressed: () => _showDialog(
-                                    CupertinoPicker(
-                                      magnification: 1.32,
-                                      squeeze: 1.2,
-                                      useMagnifier: true,
-                                      itemExtent: _kItemExtent,
-
-                                      // This sets the initial item.
-                                      scrollController:
-                                          FixedExtentScrollController(
-                                            initialItem: _selectedTown,
-                                          ),
-                                      // This is called when selected item is changed.
-                                      onSelectedItemChanged:
-                                          (int selectedItem) {
-                                            setState(() {
-                                              _selectedTown = selectedItem;
-                                            });
-                                          },
-                                      children: List<Widget>.generate(
-                                        _townName.length,
-                                        (int index) {
-                                          return Center(
-                                            child: Text(
-                                              _townName[index],
-                                              style: TextStyle(
-                                                color: Colors.black,
-                                                fontFamily: "sfproRoundRegular",
-                                                fontWeight: FontWeight.w700,
-                                                fontSize: 25.0,
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                    ),
-                                  ),
-                                  // This displays the selected fruit name.
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(5.0),
-                                    child: Container(
-                                      color: const Color.fromARGB(
-                                        0,
-                                        64,
-                                        195,
-                                        255,
-                                      ),
-                                      padding: EdgeInsets.only(
-                                        left: 20.0,
-                                        right: 20.0,
-                                        top: 5.0,
-                                        bottom: 5.0,
-                                      ),
-                                      child: Text(
-                                        _townName[_selectedTown],
-                                        style: const TextStyle(
-                                          fontSize: 20.0,
-                                          color: Colors.black,
-                                          fontFamily: "sfproRoundSemiB",
-                                        ),
-                                      ),
-                                    ),
+                              children: const [
+                                Icon(
+                                  Iconsax.profile_2user,
+                                  color: Color(0xFF8EE7FF),
+                                  size: 18,
+                                ),
+                                SizedBox(width: 10),
+                                Text(
+                                  'Owner Details',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 16,
                                   ),
                                 ),
                               ],
                             ),
+                            const SizedBox(height: 12),
+                            _buildLabeledField(
+                              'House ID',
+                              'E.g. H-125',
+                              Iconsax.card,
+                              idController,
+                            ),
+                            _buildLabeledField(
+                              'Owner Email',
+                              'owner@example.com',
+                              Icons.mail_outline,
+                              mailController,
+                            ),
+                            _buildLabeledField(
+                              'Address',
+                              'Street, City, ZIP',
+                              Iconsax.location,
+                              addressController,
+                              maxLines: 2,
+                            ),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _buildLabeledField(
+                                    'Full Name',
+                                    'John Doe',
+                                    Iconsax.user,
+                                    nameController,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: _buildLabeledField(
+                                    'NIC',
+                                    '123456789V',
+                                    Iconsax.personalcard,
+                                    nicController,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            _buildLabeledField(
+                              'Mobile',
+                              '+94 7x xxx xxxx',
+                              Iconsax.call,
+                              mobileController,
+                              keyboardType: TextInputType.phone,
+                            ),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _buildLabeledField(
+                                    'Password',
+                                    '••••••••',
+                                    Iconsax.lock,
+                                    passwordController,
+                                    isPassword: true,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: _buildLabeledField(
+                                    'Confirm',
+                                    '••••••••',
+                                    Iconsax.lock,
+                                    rePasswordController,
+                                    isPassword: true,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            Center(
+                              child: GestureDetector(
+                                onTap: _isSubmitting ? null : _submitData,
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 300),
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 16,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    gradient: themeAccent,
+                                    borderRadius: BorderRadius.circular(14),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: const Color(
+                                          0xFF00B4FF,
+                                        ).withOpacity(0.18),
+                                        blurRadius: 20,
+                                        offset: const Offset(0, 8),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Center(
+                                    child: _isSubmitting
+                                        ? Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: const [
+                                              SizedBox(
+                                                width: 20,
+                                                height: 20,
+                                                child:
+                                                    CircularProgressIndicator(
+                                                      color: Colors.white,
+                                                      strokeWidth: 2.5,
+                                                    ),
+                                              ),
+                                              SizedBox(width: 12),
+                                              Text(
+                                                'Submitting...',
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                            ],
+                                          )
+                                        : const Text(
+                                            'Send Registration Request',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 15,
+                                            ),
+                                          ),
+                                  ),
+                                ),
+                              ),
+                            ),
                           ],
                         ),
                       ),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 20),
-
-                //Enter your password
-                Padding(
-                  padding: EdgeInsets.only(bottom: 8.0, left: 5),
-                  child: Text(
-                    "Enter Your Password",
-                    style: TextStyle(
-                      fontFamily: "sfproRoundSemiB",
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-                TextFormField(
-                  controller: passwordController,
-                  style: TextStyle(
-                    color: Colors.black, // text color
-                    fontFamily: "sfproRoundRegular", // your custom font
-                    fontSize: 16, // text size
-                    fontWeight: FontWeight.w600,
-                  ),
-                  decoration: InputDecoration(
-                    labelText: "Password",
-                    hintText: "Enter your Password",
-                    labelStyle: TextStyle(
-                      color: Colors.grey,
-                      fontFamily: "sfproRoundRegular",
-                      fontWeight: FontWeight.bold,
-                    ),
-                    hintStyle: TextStyle(
-                      color: Colors.grey.shade400,
-                      fontFamily: "sfproRoundRegular",
-                      fontWeight: FontWeight.bold,
-                    ),
-                    contentPadding: EdgeInsets.symmetric(
-                      vertical: 16,
-                      horizontal: 20,
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(
-                        30,
-                      ), // rounded corners
-                      borderSide: BorderSide(
-                        color: Colors.grey.shade400, // thin grey border
-                        width: 1.5,
+                      const SizedBox(height: 26),
+                      Row(
+                        children: const [
+                          Icon(
+                            Iconsax.info_circle,
+                            color: Colors.white30,
+                            size: 16,
+                          ),
+                          SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Your details will be verified by admin. Keep information accurate.',
+                              style: TextStyle(color: Colors.white38),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
-                      borderSide: BorderSide(
-                        color: Colors.black, // highlight color when focused
-                        width: 2,
-                      ),
-                    ),
-                    floatingLabelStyle: TextStyle(
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: "sfproRoundRegular",
-                    ),
+                      const SizedBox(height: 60),
+                    ],
                   ),
                 ),
-
-                SizedBox(height: 20),
-
-                //Re Enter your password
-                Padding(
-                  padding: EdgeInsets.only(bottom: 8.0, left: 5),
-                  child: Text(
-                    "Re Enter Your Password",
-                    style: TextStyle(
-                      fontFamily: "sfproRoundSemiB",
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-                TextFormField(
-                  controller: passwordReController,
-                  style: TextStyle(
-                    color: Colors.black, // text color
-                    fontFamily: "sfproRoundRegular", // your custom font
-                    fontSize: 16, // text size
-                    fontWeight: FontWeight.w600,
-                  ),
-                  decoration: InputDecoration(
-                    labelText: "Password",
-                    hintText: "Enter your Password",
-                    labelStyle: TextStyle(
-                      color: Colors.grey,
-                      fontFamily: "sfproRoundRegular",
-                      fontWeight: FontWeight.bold,
-                    ),
-                    hintStyle: TextStyle(
-                      color: Colors.grey.shade400,
-                      fontFamily: "sfproRoundRegular",
-                      fontWeight: FontWeight.bold,
-                    ),
-                    contentPadding: EdgeInsets.symmetric(
-                      vertical: 16,
-                      horizontal: 20,
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(
-                        30,
-                      ), // rounded corners
-                      borderSide: BorderSide(
-                        color: Colors.grey.shade400, // thin grey border
-                        width: 1.5,
-                      ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
-                      borderSide: BorderSide(
-                        color: Colors.black, // highlight color when focused
-                        width: 2,
-                      ),
-                    ),
-                    floatingLabelStyle: TextStyle(
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: "sfproRoundRegular",
-                    ),
-                  ),
-                ),
-                SizedBox(height: 40),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Center(
-                      child: CupertinoButton(
-                        color: Colors.blue.withOpacity(0.2),
-                        child: Text(
-                          "Submit",
-                          style: TextStyle(
-                            fontFamily: "sfproRoundSemiB",
-                            fontSize: 20,
-                            color: Colors.blue,
+              ),
+              if (_isSubmitting)
+                Container(
+                  color: Colors.black.withOpacity(0.55),
+                  child: Center(
+                    child: FadeTransition(
+                      opacity: _fadeAnim,
+                      child: ScaleTransition(
+                        scale: Tween<double>(begin: 1.2, end: 1.0).animate(
+                          CurvedAnimation(
+                            parent: _pageController,
+                            curve: Curves.easeOutBack,
                           ),
                         ),
-                        onPressed: () async {
-                          bool result =
-                              await InternetConnection().hasInternetAccess;
-
-                          if (result == false) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'No internet connection',
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                                duration: Duration(seconds: 3),
-                                backgroundColor: Colors.grey,
+                        child: Container(
+                          width: 140,
+                          height: 140,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: RadialGradient(
+                              colors: [
+                                const Color(0xFF00B4FF).withOpacity(0.18),
+                                Colors.transparent,
+                              ],
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(
+                                  0xFF00B4FF,
+                                ).withOpacity(0.35),
+                                blurRadius: 40,
+                                spreadRadius: 20,
                               ),
-                            );
-                            return;
-                          } else {
-                            if (idController.text.isEmpty ||
-                                usernameController.text.isEmpty ||
-                                mobileController.text.isEmpty ||
-                                nicController.text.isEmpty ||
-                                passwordController.text.isEmpty ||
-                                _townName[_selectedTown].toString().isEmpty ||
-                                passwordReController.text.isEmpty ||
-                                passwordController.text !=
-                                    passwordReController.text) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    'Please fill all fields correctly',
-                                    style: TextStyle(color: Colors.white),
+                            ],
+                          ),
+                          child: Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: const [
+                                SizedBox(
+                                  width: 34,
+                                  height: 34,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 3,
+                                    color: Color(0xFF6DD3FF),
                                   ),
-                                  duration: Duration(seconds: 5),
-                                  backgroundColor: Colors.red,
                                 ),
-                              );
-                              return;
-                            } else {
-                              Map<String, String> employeeData = {
-                                "employeeId": idController.text,
-                                "employeeName": usernameController.text,
-                                "employeeMobile": mobileController.text,
-                                "employeePosition": "RM",
-                                "employeeLocation": _townName[_selectedTown]
-                                    .toString(),
-                                "employeePassword": passwordController.text,
-                              };
-                              employeeReference
-                                  .child(idController.text)
-                                  .set(employeeData)
-                                  .then((_) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          '${usernameController.text} Registration Request Sent Successfully',
-                                          style: TextStyle(color: Colors.white),
-                                        ),
-                                        duration: Duration(seconds: 5),
-                                        backgroundColor: Colors.green,
-                                      ),
-                                    );
-                                  })
-                                  .catchError((error) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          "Failed to save manager data: $error",
-                                          style: TextStyle(color: Colors.white),
-                                        ),
-                                        duration: Duration(seconds: 5),
-                                        backgroundColor: Colors.redAccent,
-                                      ),
-                                    );
-                                  });
-                            }
-                          }
-                        },
+                                SizedBox(height: 8),
+                                Text(
+                                  'Verifying...',
+                                  style: TextStyle(
+                                    color: Colors.white70,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
                     ),
-                  ],
+                  ),
                 ),
-              ],
-            ),
+            ],
           ),
         ),
       ),
     );
   }
+
+  Widget _buildTechBackground() {
+    return CustomPaint(
+      painter: _GridPainter(),
+      child: Container(color: Colors.transparent),
+    );
+  }
+
+  Widget _buildAnimatedBackground() {
+    return AnimatedBuilder(
+      animation: _circleController,
+      builder: (context, child) {
+        return Stack(
+          children: [
+            Align(
+              alignment: Alignment.topRight,
+              child: Transform.translate(
+                offset: Offset(
+                  90 * _circleMove1.value.dx,
+                  70 * _circleMove1.value.dy,
+                ),
+                child: Transform.scale(
+                  scale: _circlePulse.value,
+                  child: Container(
+                    width: 260,
+                    height: 260,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors: [
+                          const Color(0xFF0E5AA7).withOpacity(0.18),
+                          const Color(0xFF00B4FF).withOpacity(0.06),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF00B4FF).withOpacity(0.12),
+                          blurRadius: 60,
+                          spreadRadius: 30,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Align(
+              alignment: Alignment.bottomLeft,
+              child: Transform.translate(
+                offset: Offset(
+                  -50 * _circleMove2.value.dx,
+                  -40 * _circleMove2.value.dy,
+                ),
+                child: Transform.scale(
+                  scale: _circlePulse.value,
+                  child: Container(
+                    width: 320,
+                    height: 320,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors: [
+                          const Color(0xFF6A0FA6).withOpacity(0.08),
+                          const Color(0xFF00B4FF).withOpacity(0.06),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF6A0FA6).withOpacity(0.12),
+                          blurRadius: 80,
+                          spreadRadius: 40,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _headerCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.02),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white.withOpacity(0.04)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 68,
+            height: 68,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF00B4FF), Color(0xFF6DD3FF)],
+              ),
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.5),
+                  blurRadius: 10,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: const Icon(Iconsax.house, color: Colors.white, size: 34),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                Text(
+                  'Register as House Owner',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                SizedBox(height: 6),
+                Text(
+                  'Register once so collectors can find your pickup address. Your data is secure.',
+                  style: TextStyle(color: Colors.white60, fontSize: 13),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLabeledField(
+    String label,
+    String hint,
+    IconData icon,
+    TextEditingController controller, {
+    bool isPassword = false,
+    int maxLines = 1,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                '*',
+                style: TextStyle(color: Color(0xFF6DD3FF), fontSize: 12),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.02),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.white.withOpacity(0.04)),
+            ),
+            child: Row(
+              children: [
+                Icon(icon, color: Colors.white30, size: 18),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: TextField(
+                    controller: controller,
+                    obscureText: isPassword,
+                    maxLines: maxLines,
+                    keyboardType: keyboardType,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      hintText: hint,
+                      hintStyle: TextStyle(
+                        color: Colors.white.withOpacity(0.35),
+                      ),
+                      border: InputBorder.none,
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GridPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..color = Colors.white.withOpacity(0.02);
+    final step = 28.0;
+    for (double x = 0; x < size.width; x += step) {
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
+    }
+    for (double y = 0; y < size.height; y += step) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+    }
+    final paint2 = Paint()..color = Colors.white.withOpacity(0.008);
+    for (double x = -size.height; x < size.width; x += 56) {
+      canvas.drawLine(
+        Offset(x, 0),
+        Offset(x + size.height, size.height),
+        paint2,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

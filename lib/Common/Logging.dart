@@ -10,7 +10,7 @@ class Logging extends StatefulWidget {
   State<Logging> createState() => _LoggingState();
 }
 
-class _LoggingState extends State<Logging> {
+class _LoggingState extends State<Logging> with TickerProviderStateMixin {
   final usernameController = TextEditingController();
   final passwordController = TextEditingController();
 
@@ -18,252 +18,316 @@ class _LoggingState extends State<Logging> {
   bool isVisibleLoading = false;
   bool obscurePassword = true;
 
+  late AnimationController _fadeController;
+  late Animation<double> _fadeAnimation;
+  late AnimationController _glowController;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _fadeController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 1),
+    );
+    _fadeAnimation = CurvedAnimation(
+      parent: _fadeController,
+      curve: Curves.easeInOut,
+    );
+    _fadeController.forward();
+
+    _glowController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _fadeController.dispose();
+    _glowController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBody: true,
-      backgroundColor: const Color(0xFFF3F4F6),
+      backgroundColor: const Color(0xFF0B1220),
       body: Stack(
         children: [
-          // Background gradient
-          Container(
+          // ✨ Gradient background
+          AnimatedContainer(
+            duration: const Duration(seconds: 2),
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [Color(0xFF111827), Color(0xFF1F2937)],
+                colors: [
+                  Color(0xFF0E1628),
+                  Color(0xFF122844),
+                  Color(0xFF0E1628),
+                ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
             ),
           ),
-          Positioned(
-            top: -60,
-            right: -60,
-            child: Container(
-              width: 180,
-              height: 180,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: [Colors.blue.shade400, Colors.cyanAccent.shade100],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: -100,
-            left: -80,
-            child: Container(
-              width: 200,
-              height: 200,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: [Colors.purple.shade400, Colors.pinkAccent.shade100],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-            ),
-          ),
 
-          // Login Card
-          Center(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 16,
-                ),
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(32),
-                    color: Colors.white.withOpacity(0.1),
-                    border: Border.all(color: Colors.white.withOpacity(0.3)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.25),
-                        blurRadius: 30,
-                        offset: const Offset(0, 10),
+          // 🔵 Animated background glows
+          AnimatedBuilder(
+            animation: _glowController,
+            builder: (context, child) {
+              final glow = (_glowController.value * 0.5) + 0.5;
+              return Stack(
+                children: [
+                  Positioned(
+                    top: -80,
+                    right: -60,
+                    child: Container(
+                      width: 220,
+                      height: 220,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: RadialGradient(
+                          colors: [
+                            Colors.blueAccent.withOpacity(glow * 0.4),
+                            Colors.transparent,
+                          ],
+                        ),
                       ),
-                    ],
+                    ),
                   ),
-                  padding: const EdgeInsets.all(28),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const SizedBox(height: 10),
-                      const Text(
-                        "Welcome Back 👋",
-                        style: TextStyle(
-                          fontSize: 36,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          fontFamily: "sfProRoundSemiB",
+                  Positioned(
+                    bottom: -100,
+                    left: -60,
+                    child: Container(
+                      width: 240,
+                      height: 240,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: RadialGradient(
+                          colors: [
+                            Colors.cyanAccent.withOpacity(glow * 0.4),
+                            Colors.transparent,
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 6),
-                      Text(
-                        "Sign in to continue to your account",
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 16,
-                          fontFamily: "sfproRoundRegular",
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+
+          // 💎 Login Form
+          FadeTransition(
+            opacity: _fadeAnimation,
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 30,
+                  vertical: 60,
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // 🧠 App Icon
+                    Container(
+                      height: 110,
+                      width: 110,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF00BFFF), Color(0xFF0072FF)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
                         ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.blueAccent.withOpacity(0.6),
+                            blurRadius: 30,
+                            spreadRadius: 5,
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 40),
-
-                      // ID Field
-                      _buildInputField(
-                        controller: usernameController,
-                        hintText: "Enter your ID Number",
-                        icon: Iconsax.user,
+                      child: const Icon(
+                        Iconsax.truck,
+                        color: Colors.white,
+                        size: 50,
                       ),
-                      const SizedBox(height: 25),
+                    ),
+                    const SizedBox(height: 30),
 
-                      // Password Field
-                      _buildInputField(
-                        controller: passwordController,
-                        hintText: "Enter your Password",
-                        icon: Iconsax.lock,
-                        isPassword: true,
+                    // Title
+                    const Text(
+                      "Welcome Back",
+                      style: TextStyle(
+                        fontSize: 34,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        letterSpacing: 0.5,
+                        fontFamily: "sfProRoundSemiB",
                       ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      "Login to continue managing your account.",
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.white70,
+                        fontFamily: "sfproRoundRegular",
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 45),
 
-                      const SizedBox(height: 30),
+                    // 🧩 Glass input fields
+                    _buildInputField(
+                      controller: usernameController,
+                      hintText: "Enter your ID Number",
+                      icon: Iconsax.user,
+                    ),
+                    const SizedBox(height: 25),
+                    _buildInputField(
+                      controller: passwordController,
+                      hintText: "Enter your Password",
+                      icon: Iconsax.lock,
+                      isPassword: true,
+                    ),
+                    const SizedBox(height: 40),
 
-                      // Login Button
-                      AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 400),
-                        child: isVisibleButton
-                            ? GestureDetector(
-                                onTap: () {
+                    // 🌈 Login button
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 400),
+                      child: isVisibleButton
+                          ? GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  isVisibleButton = false;
+                                  isVisibleLoading = true;
+                                });
+
+                                Future.delayed(const Duration(seconds: 2), () {
                                   setState(() {
-                                    isVisibleButton = false;
-                                    isVisibleLoading = true;
+                                    isVisibleButton = true;
+                                    isVisibleLoading = false;
                                   });
-
-                                  Future.delayed(
-                                    const Duration(seconds: 2),
-                                    () {
-                                      setState(() {
-                                        isVisibleButton = true;
-                                        isVisibleLoading = false;
-                                      });
-                                    },
-                                  );
-                                },
-                                child: Container(
-                                  width: double.infinity,
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 18,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
-                                      colors: [
-                                        Color(0xFF00C6FF),
-                                        Color(0xFF0072FF),
-                                      ],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                    ),
-                                    borderRadius: BorderRadius.circular(20),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.blueAccent.withOpacity(
-                                          0.4,
-                                        ),
-                                        blurRadius: 20,
-                                        offset: const Offset(0, 8),
-                                      ),
+                                });
+                              },
+                              child: Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 18,
+                                ),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(20),
+                                  gradient: const LinearGradient(
+                                    colors: [
+                                      Color(0xFF00C6FF),
+                                      Color(0xFF0072FF),
                                     ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
                                   ),
-                                  child: const Center(
-                                    child: Text(
-                                      "Login",
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                        letterSpacing: 0.5,
-                                        fontFamily: "sfProRoundSemiB",
-                                      ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.blueAccent.withOpacity(0.5),
+                                      blurRadius: 20,
+                                      offset: const Offset(0, 8),
+                                    ),
+                                  ],
+                                ),
+                                child: const Center(
+                                  child: Text(
+                                    "Login",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 0.5,
+                                      fontFamily: "sfProRoundSemiB",
                                     ),
                                   ),
                                 ),
-                              )
-                            : const CupertinoActivityIndicator(
-                                radius: 14,
-                                color: Colors.white,
                               ),
+                            )
+                          : const CupertinoActivityIndicator(
+                              radius: 14,
+                              color: Colors.white,
+                            ),
+                    ),
+                    const SizedBox(height: 25),
+
+                    // Forgot Password
+                    GestureDetector(
+                      onTap: () {},
+                      child: Text(
+                        "Forgot Password?",
+                        style: TextStyle(
+                          color: Colors.blueAccent.shade100,
+                          fontSize: 15,
+                          fontFamily: "sfproRoundSemiB",
+                        ),
                       ),
+                    ),
+                    const SizedBox(height: 40),
 
-                      const SizedBox(height: 25),
+                    // Divider
+                    Row(
+                      children: const [
+                        Expanded(child: Divider(color: Colors.white24)),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 10),
+                          child: Text(
+                            "or",
+                            style: TextStyle(color: Colors.white60),
+                          ),
+                        ),
+                        Expanded(child: Divider(color: Colors.white24)),
+                      ],
+                    ),
+                    const SizedBox(height: 30),
 
-                      // Forgot password
-                      GestureDetector(
-                        onTap: () {},
-                        child: Text(
-                          "Forgot Password?",
+                    // 🌍 Register Options
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CupertinoButton(
+                          padding: EdgeInsets.zero,
+                          onPressed: () {
+                            Navigator.of(context).push(_createRoute());
+                          },
+                          child: const CircleAvatar(
+                            radius: 28,
+                            backgroundColor: Color(0xFF00C853),
+                            child: Icon(
+                              Iconsax.building_4,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 20),
+                        const Text(
+                          "No account yet?",
                           style: TextStyle(
-                            color: Colors.blueAccent.shade100,
+                            color: Colors.white70,
                             fontSize: 15,
                             fontFamily: "sfproRoundSemiB",
                           ),
                         ),
-                      ),
-
-                      const SizedBox(height: 30),
-                      Divider(color: Colors.white24, thickness: 1),
-                      const SizedBox(height: 20),
-
-                      // Create Account Row
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          CupertinoButton(
-                            padding: EdgeInsets.zero,
-                            onPressed: () {
-                              Navigator.of(context).push(_createRoute());
-                            },
-                            child: const CircleAvatar(
-                              radius: 26,
-                              backgroundColor: Color(0xFF00C853),
-                              child: Icon(
-                                Iconsax.building_4,
-                                color: Colors.white,
-                              ),
-                            ),
+                        const SizedBox(width: 20),
+                        CupertinoButton(
+                          padding: EdgeInsets.zero,
+                          onPressed: () {
+                            Navigator.of(context).push(_createRoute());
+                          },
+                          child: const CircleAvatar(
+                            radius: 28,
+                            backgroundColor: Color(0xFF1E88E5),
+                            child: Icon(Iconsax.user_add, color: Colors.white),
                           ),
-                          const SizedBox(width: 12),
-                          const Text(
-                            "No account yet?",
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontSize: 14,
-                              fontFamily: "sfproRoundSemiB",
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          CupertinoButton(
-                            padding: EdgeInsets.zero,
-                            onPressed: () {
-                              Navigator.of(context).push(_createRoute());
-                            },
-                            child: const CircleAvatar(
-                              radius: 26,
-                              backgroundColor: Color(0xFF1E88E5),
-                              child: Icon(
-                                Iconsax.user_add,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -273,7 +337,7 @@ class _LoggingState extends State<Logging> {
     );
   }
 
-  // ✅ Use CupertinoPageRoute for native smooth + swipe-back
+  // ✅ Navigation animation
   Route _createRoute() {
     return CupertinoPageRoute(builder: (context) => const Useridentifier());
   }
@@ -286,17 +350,22 @@ class _LoggingState extends State<Logging> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
+        color: Colors.white.withOpacity(0.08),
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: Colors.white.withOpacity(0.2)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.blueAccent.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
       child: TextField(
         controller: controller,
         obscureText: isPassword ? obscurePassword : false,
-        style: const TextStyle(
-          color: Colors.white,
-          fontFamily: "sfproRoundRegular",
-        ),
+        style: const TextStyle(color: Colors.white),
+        cursorColor: Colors.blueAccent,
         decoration: InputDecoration(
           prefixIcon: Icon(icon, color: Colors.white70),
           suffixIcon: isPassword
