@@ -187,7 +187,7 @@ class _LoggingState extends State<Logging> with TickerProviderStateMixin {
                     // 🧩 Glass input fields
                     _buildInputField(
                       controller: useremailController,
-                      hintText: "Enter your ID Number",
+                      hintText: "Enter your Email",
                       icon: Iconsax.user,
                     ),
                     const SizedBox(height: 25),

@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
@@ -22,6 +23,7 @@ class _DriRegState extends State<DriReg> with TickerProviderStateMixin {
   late Animation<Offset> _slideAnim;
 
   late DatabaseReference personReference;
+  late DatabaseReference DeiverProfileRef;
 
   bool _isSubmitting = false;
 
@@ -39,6 +41,7 @@ class _DriRegState extends State<DriReg> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     personReference = FirebaseDatabase.instance.ref().child("Persons");
+    DeiverProfileRef = FirebaseDatabase.instance.ref().child("Driver_Profiles");
 
     // Background animations
     _circleController = AnimationController(
@@ -136,7 +139,25 @@ class _DriRegState extends State<DriReg> with TickerProviderStateMixin {
     };
 
     try {
-      await personReference.child(emailController.text).set(driverData);
+      UserCredential userCred = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(
+            email: emailController.text.trim(),
+            password: passwordController.text,
+          );
+
+      String safeEmail = emailController.text.trim().replaceAll('.', '_');
+
+      await personReference.child(safeEmail).set(driverData);
+      await DeiverProfileRef.child(
+        "House_Profile",
+      ).child(safeEmail).child("Profile_Info").set({
+        "Owner_Name": nameController.text.trim(),
+        "Owner_Mobile": mobileController.text.trim(),
+        "Owner_NIC": nicController.text.trim(),
+        "Owner_Email": emailController.text.trim(),
+        "Owner_Address": addressController.text.trim().replaceAll('/', '_'),
+        "Registered_House_ID": idController.text.trim().replaceAll('/', '_'),
+      });
       _showSnack(
         '${nameController.text} Registration Request Sent Successfully',
         Colors.green,
