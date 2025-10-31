@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "988033976327",
+    "firebase_url": "https://bingo-cef6d-default-rtdb.firebaseio.com",
+    "project_id": "bingo-cef6d",
+    "storage_bucket": "bingo-cef6d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:988033976327:android:3fbe6ecc47163a8592c2a2",
+        "android_client_info": {
+          "package_name": "com.example.bingo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCwilyah1XMiVO9VDeyIG2ysgPpj2j9LME"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
