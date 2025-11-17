@@ -42,8 +42,8 @@ class _HOwnerNavBarState extends State<HOwnerNavBar> {
         backgroundColor: const Color(0xFFF5F6FA),
         body: Stack(
           children: [
-            // Active screen
-            rm_controller.screens[rm_controller.selectedIndex.value],
+            // Active screen (built on demand to ensure latest code is used)
+            _activeScreen(),
 
             // Floating glass navigation bar
             Positioned(
@@ -188,6 +188,23 @@ class _HOwnerNavBarState extends State<HOwnerNavBar> {
       ),
     );
   }
+
+  Widget _activeScreen() {
+    final idx = rm_controller.selectedIndex.value;
+    switch (idx) {
+      case 0:
+        // Key the home by username so a fresh instance is created per user/login.
+        return HOwnerHome(key: ValueKey(widget.username));
+      case 1:
+        return pgtwo();
+      case 2:
+        return pgthree();
+      case 3:
+        return pgfour();
+      default:
+        return HOwnerHome(key: ValueKey(widget.username));
+    }
+  }
 }
 
 class RMNavigControll extends GetxController {
@@ -204,10 +221,10 @@ class RMNavigControll extends GetxController {
     {'icon': Iconsax.coin, 'label': 'Payment'},
   ];
 
-  late final List<Widget> screens = [
-    HOwnerHome(),
-    pgtwo(),
-    pgthree(),
-    pgfour(),
-  ];
+  List<Widget> get screens => [
+        HOwnerHome(),
+        pgtwo(),
+        pgthree(),
+        pgfour(),
+      ];
 }
