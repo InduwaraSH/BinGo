@@ -4,7 +4,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class HOwnerHome extends StatefulWidget {
-  const HOwnerHome({super.key});
+  final String? displayName;
+
+  const HOwnerHome({super.key, this.displayName});
 
   @override
   State<HOwnerHome> createState() => _HOwnerHomeState();
@@ -15,6 +17,12 @@ class _HOwnerHomeState extends State<HOwnerHome> {
   final _addressController = TextEditingController();
   final _contactController = TextEditingController();
   final _descController = TextEditingController();
+  // Controllers for the "Add Jobs" form (kept separate from complaints)
+  final _jobFullNameController = TextEditingController();
+  final _jobAddressController = TextEditingController();
+  final _jobContactController = TextEditingController();
+  final _jobTypeController = TextEditingController();
+  final _jobWeightController = TextEditingController();
   bool _showComplaintForm = false;
   @override
   void initState() {
@@ -44,10 +52,13 @@ class _HOwnerHomeState extends State<HOwnerHome> {
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        Text('Hi, WelcomeBack', style: TextStyle(color: Colors.black54, fontSize: 12)),
-                        SizedBox(height: 2),
-                        Text('John Doe', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      children: [
+                        const Text('Hi, WelcomeBack', style: TextStyle(color: Colors.black54, fontSize: 12)),
+                        const SizedBox(height: 2),
+                        Text(
+                          widget.displayName == null || widget.displayName!.isEmpty ? 'John Doe' : widget.displayName!,
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        ),
                       ],
                     ),
                   ),
@@ -83,9 +94,18 @@ class _HOwnerHomeState extends State<HOwnerHome> {
                       ),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Text('$day', style: TextStyle(color: isSelected ? Colors.white : Colors.black, fontWeight: FontWeight.bold)),
-                          Text(['MON','TUE','WED','THU','FRI','SAT','SUN'][index], style: TextStyle(fontSize: 11, color: isSelected ? Colors.white70 : Colors.black45)),
+                          Text(
+                            '$day',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: isSelected ? Colors.white : Colors.black, fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            ['MON','TUE','WED','THU','FRI','SAT','SUN'][index],
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: 11, color: isSelected ? Colors.white70 : Colors.black45),
+                          ),
                         ],
                       ),
                     );
@@ -113,14 +133,60 @@ class _HOwnerHomeState extends State<HOwnerHome> {
 
               const SizedBox(height: 18),
 
-              // ADD JOBS placeholder card
+              // ADD JOBS card with form fields
               Card(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                elevation: 2,
-                child: Container(
+                color: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  side: BorderSide(color: Colors.grey.shade300),
+                ),
+                child: Padding(
                   padding: const EdgeInsets.all(18),
-                  height: 160,
-                  child: const Center(child: Text('ADD JOBS', style: TextStyle(fontWeight: FontWeight.bold))),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const Center(child: Text('ADD JOBS', style: TextStyle(fontWeight: FontWeight.bold))),
+                      const SizedBox(height: 12),
+                      _buildTextField(controller: _jobFullNameController, label: 'Full Name', hint: 'Jane Doe'),
+                      const SizedBox(height: 10),
+                      _buildTextField(controller: _jobAddressController, label: 'Address', hint: 'Address'),
+                      const SizedBox(height: 10),
+                      _buildTextField(controller: _jobContactController, label: 'Contact No.', hint: 'Number', keyboardType: TextInputType.phone),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Expanded(child: _buildTextField(controller: _jobTypeController, label: 'Type (Plastic / Organic)', hint: 'Type')),
+                          const SizedBox(width: 10),
+                          Expanded(child: _buildTextField(controller: _jobWeightController, label: 'Weight (Kg)', hint: 'Weight', keyboardType: TextInputType.number)),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Center(
+                        child: OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                          ),
+                          child: const Text('+ ADD JOBS', style: TextStyle(fontWeight: FontWeight.bold)),
+                          onPressed: () {
+                            if (_jobFullNameController.text.isEmpty || _jobAddressController.text.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please fill required fields')));
+                              return;
+                            }
+                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Job added')));
+                            setState(() {
+                              _jobFullNameController.clear();
+                              _jobAddressController.clear();
+                              _jobContactController.clear();
+                              _jobTypeController.clear();
+                              _jobWeightController.clear();
+                            });
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
 
@@ -163,8 +229,12 @@ class _HOwnerHomeState extends State<HOwnerHome> {
               // Complaint form - shown when toggled
               if (_showComplaintForm)
                 Card(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                  elevation: 2,
+                  color: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    side: BorderSide(color: Colors.grey.shade300),
+                  ),
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: Column(
@@ -267,6 +337,11 @@ class _HOwnerHomeState extends State<HOwnerHome> {
     _addressController.dispose();
     _contactController.dispose();
     _descController.dispose();
+    _jobFullNameController.dispose();
+    _jobAddressController.dispose();
+    _jobContactController.dispose();
+    _jobTypeController.dispose();
+    _jobWeightController.dispose();
     super.dispose();
   }
 }

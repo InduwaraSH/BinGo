@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:bingo/H_Owner/H_Owner_Home.dart';
+import 'package:bingo/H_Owner/payment/payment_method.dart';
 import 'package:bingo/a.dart';
 import 'package:bingo/b.dart';
 import 'package:bingo/c.dart';
@@ -89,9 +90,15 @@ class _HOwnerNavBarState extends State<HOwnerNavBar> {
                             return Expanded(
                               flex: flex,
                               child: GestureDetector(
-                                behavior: HitTestBehavior.opaque,
-                                onTap: () =>
-                                    rm_controller.selectedIndex.value = index,
+                                  behavior: HitTestBehavior.opaque,
+                                  onTap: () {
+                                    // If Payment tab tapped, open PaymentMethod page instead
+                                    if (item['label'] == 'Payment' || index == 3) {
+                                      Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PaymentMethodPage()));
+                                    } else {
+                                      rm_controller.selectedIndex.value = index;
+                                    }
+                                  },
                                 child: AnimatedContainer(
                                   duration: const Duration(milliseconds: 420),
                                   curve: Curves.easeOutCubic,
@@ -194,7 +201,7 @@ class _HOwnerNavBarState extends State<HOwnerNavBar> {
     switch (idx) {
       case 0:
         // Key the home by username so a fresh instance is created per user/login.
-        return HOwnerHome(key: ValueKey(widget.username));
+        return HOwnerHome(key: ValueKey(widget.username), displayName: widget.office_location);
       case 1:
         return pgtwo();
       case 2:
@@ -202,7 +209,7 @@ class _HOwnerNavBarState extends State<HOwnerNavBar> {
       case 3:
         return pgfour();
       default:
-        return HOwnerHome(key: ValueKey(widget.username));
+        return HOwnerHome(key: ValueKey(widget.username), displayName: widget.office_location);
     }
   }
 }
@@ -222,7 +229,7 @@ class RMNavigControll extends GetxController {
   ];
 
   List<Widget> get screens => [
-        HOwnerHome(),
+      HOwnerHome(displayName: username),
         pgtwo(),
         pgthree(),
         pgfour(),
