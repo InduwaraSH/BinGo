@@ -1,3 +1,4 @@
 {
-    "cmake.sourceDirectory": "/Users/dolee/Movies/bingo/linux"
+    "cmake.sourceDirectory": "/Users/dolee/Movies/bingo/linux",
+    "C_Cpp.errorSquiggles": "disabled"
 }
