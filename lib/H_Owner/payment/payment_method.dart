@@ -51,7 +51,7 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
             const SizedBox(height: 12),
             _optionRow(icon: Icons.apple, label: 'Apple Pay', value: 'apple'),
             const SizedBox(height: 10),
-            _optionRow(icon: Icons.paypal, label: 'Paypal', value: 'paypal'),
+            _optionRow(icon: Icons.paypal, label: 'PayPal', value: 'paypal'),
             const SizedBox(height: 10),
             _optionRow(icon: Icons.g_mobiledata, label: 'Google Play', value: 'google'),
           ],
