@@ -22,7 +22,7 @@ class PaymentSuccessPage extends StatelessWidget {
                 children: [
                   CircleAvatar(radius: 56, backgroundColor: Colors.white, child: Icon(Icons.check, size: 64, color: Color(0xFF2C6BFF))),
                   SizedBox(height: 20),
-                  Text('Congratulation', style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
+                  Text('Congratulations', style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
                   SizedBox(height: 8),
                   Text('Payment is Successfully', style: TextStyle(color: Colors.white70)),
                 ],
