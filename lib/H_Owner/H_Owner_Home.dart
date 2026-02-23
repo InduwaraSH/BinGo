@@ -53,7 +53,7 @@ class _HOwnerHomeState extends State<HOwnerHome> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Hi, WelcomeBack', style: TextStyle(color: Colors.black54, fontSize: 12)),
+                        const Text('Hi, Welcome Back', style: TextStyle(color: Colors.black54, fontSize: 12)),
                         const SizedBox(height: 2),
                         Text(
                           widget.displayName == null || widget.displayName!.isEmpty ? 'John Doe' : widget.displayName!,
