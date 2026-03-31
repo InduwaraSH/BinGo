@@ -101,25 +101,5 @@ class PaymentPage extends StatelessWidget {
         ),
       );
 
-  @override
-  Widget buildBottomNav() {
-    // Not used directly, but provide bottom nav builder for parity with other pages
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 12),
-      child: Container(
-        height: 64,
-        decoration: BoxDecoration(color: Colors.blue, borderRadius: BorderRadius.circular(32)),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: const [
-            Icon(Icons.home, color: Colors.white),
-            Icon(Icons.chat_bubble_outline, color: Colors.white),
-            Icon(Icons.person_outline, color: Colors.white),
-            Icon(Icons.calendar_today, color: Colors.white),
-          ],
-        ),
-      ),
-    );
-  }
 }
 
