@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:bingo/H_Owner/H_Owner_Home.dart';
+import 'package:bingo/H_Owner/H_Owner_Jobs.dart';
 import 'package:bingo/H_Owner/payment/payment_method.dart';
 import 'package:bingo/H_Owner/payment/payment_page.dart';
 import 'package:bingo/H_Owner/payment/add_card.dart';
@@ -203,7 +204,7 @@ class _HOwnerNavBarState extends State<HOwnerNavBar> {
       case 1:
         return pgtwo();
       case 2:
-        return pgthree();
+        return const HOwnerJobs();
       case 3:
         return const PaymentPage();
       default:
@@ -229,7 +230,7 @@ class RMNavigControll extends GetxController {
   List<Widget> get screens => [
       HOwnerHome(displayName: username),
         pgtwo(),
-        pgthree(),
+        const HOwnerJobs(),
         const PaymentPage(),
       ];
 }
