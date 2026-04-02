@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'models/job_model.dart';
 
 class HOwnerJobs extends StatefulWidget {
   const HOwnerJobs({super.key});
@@ -8,27 +9,6 @@ class HOwnerJobs extends StatefulWidget {
 }
 
 class _HOwnerJobsState extends State<HOwnerJobs> {
-  final List<Map<String, String>> _jobs = [
-    {
-      'dateLabel': 'Month 24, Year',
-      'time': 'WED, 10:00 AM',
-      'fullName': 'Jane Doe',
-      'address': 'Address',
-      'contact': 'Number',
-      'type': 'Type',
-      'weight': 'Weight',
-    },
-    {
-      'dateLabel': 'Month 24, Year',
-      'time': 'WED, 10:00 AM',
-      'fullName': 'Jane Doe',
-      'address': 'Address',
-      'contact': 'Number',
-      'type': 'Type',
-      'weight': 'Weight',
-    }
-  ];
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -74,83 +54,90 @@ class _HOwnerJobsState extends State<HOwnerJobs> {
             const SizedBox(height: 18),
 
             // Jobs list
-            ListView.separated(
-              physics: const NeverScrollableScrollPhysics(),
-              shrinkWrap: true,
-              itemCount: _jobs.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (context, idx) {
-                final j = _jobs[idx];
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 14.0),
-                  child: Column(
-                    children: [
-                      const Divider(thickness: 1, color: Colors.blueAccent, height: 2),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                            decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(20)),
-                            child: Column(
+            jobsList.isEmpty
+                ? Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 40.0),
+                    child: Text('No jobs available', style: TextStyle(color: Colors.grey.shade600, fontSize: 16)),
+                  )
+                : ListView.separated(
+                    physics: const NeverScrollableScrollPhysics(),
+                    shrinkWrap: true,
+                    itemCount: jobsList.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    itemBuilder: (context, idx) {
+                      final job = jobsList[idx];
+                      final dateLabel = '${job.dateCreated.day}/${job.dateCreated.month}/${job.dateCreated.year}';
+                      final timeLabel = '${job.dateCreated.hour.toString().padLeft(2, '0')}:${job.dateCreated.minute.toString().padLeft(2, '0')}';
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 14.0),
+                        child: Column(
+                          children: [
+                            const Divider(thickness: 1, color: Colors.blueAccent, height: 2),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                  decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(20)),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(dateLabel, style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold)),
+                                      const SizedBox(height: 4),
+                                      Text(timeLabel, style: const TextStyle(color: Colors.black54, fontSize: 12)),
+                                    ],
+                                  ),
+                                ),
+                                const Spacer(),
+                                IconButton(onPressed: () {/* accept */}, icon: Icon(Icons.check_circle, color: Colors.blue)),
+                                IconButton(onPressed: () {/* reject */}, icon: Icon(Icons.cancel, color: Colors.grey.shade400)),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(j['dateLabel'] ?? '', style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold)),
-                                const SizedBox(height: 4),
-                                Text(j['time'] ?? '', style: const TextStyle(color: Colors.black54, fontSize: 12)),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: const [
+                                      Text('Full Name', style: TextStyle(color: Colors.black54)),
+                                      SizedBox(height: 6),
+                                      Text('Address', style: TextStyle(color: Colors.black54)),
+                                      SizedBox(height: 6),
+                                      Text('Contact No.', style: TextStyle(color: Colors.black54)),
+                                      SizedBox(height: 6),
+                                      Text('Type', style: TextStyle(color: Colors.black54)),
+                                      SizedBox(height: 6),
+                                      Text('Weight (Kg)', style: TextStyle(color: Colors.black54)),
+                                    ],
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      Text(job.fullName, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                      const SizedBox(height: 6),
+                                      Text(job.address, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                      const SizedBox(height: 6),
+                                      Text(job.contact, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                      const SizedBox(height: 6),
+                                      Text(job.type, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                      const SizedBox(height: 6),
+                                      Text(job.weight, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                    ],
+                                  ),
+                                ),
                               ],
                             ),
-                          ),
-                          const Spacer(),
-                          IconButton(onPressed: () {/* accept */}, icon: Icon(Icons.check_circle, color: Colors.blue)),
-                          IconButton(onPressed: () {/* reject */}, icon: Icon(Icons.cancel, color: Colors.grey.shade400)),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: const [
-                                Text('Full Name', style: TextStyle(color: Colors.black54)),
-                                SizedBox(height: 6),
-                                Text('Address', style: TextStyle(color: Colors.black54)),
-                                SizedBox(height: 6),
-                                Text('Contact No.', style: TextStyle(color: Colors.black54)),
-                                SizedBox(height: 6),
-                                Text('Type', style: TextStyle(color: Colors.black54)),
-                                SizedBox(height: 6),
-                                Text('Weight (Kg)', style: TextStyle(color: Colors.black54)),
-                              ],
-                            ),
-                          ),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(j['fullName'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
-                                const SizedBox(height: 6),
-                                Text(j['address'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
-                                const SizedBox(height: 6),
-                                Text(j['contact'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
-                                const SizedBox(height: 6),
-                                Text(j['type'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
-                                const SizedBox(height: 6),
-                                Text(j['weight'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      const Divider(color: Colors.blueAccent),
-                    ],
+                            const SizedBox(height: 12),
+                            const Divider(color: Colors.blueAccent),
+                          ],
+                        ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
 
             const SizedBox(height: 40),
           ],
