@@ -1,12 +1,11 @@
-import 'package:bingo/Common/Logging.dart';
-import 'package:bingo/Driver/Dri_Nav_Bar.dart';
+import 'package:bingo/Common/auth_checker.dart';
 import 'package:bingo/firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   runApp(const MyApp());
 }
@@ -14,9 +13,11 @@ void main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(home: Logging());
+    return const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: AuthChecker(),
+    );
   }
 }

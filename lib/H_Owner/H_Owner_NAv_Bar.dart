@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:bingo/H_Owner/H_Owner_Home.dart';
+import 'package:bingo/H_Owner/feature/home_screen/presentation/screens/home_page.dart';
 import 'package:bingo/a.dart';
 import 'package:bingo/b.dart';
 import 'package:bingo/c.dart';
@@ -204,10 +205,5 @@ class RMNavigControll extends GetxController {
     {'icon': Iconsax.coin, 'label': 'Payment'},
   ];
 
-  late final List<Widget> screens = [
-    HOwnerHome(),
-    pgtwo(),
-    pgthree(),
-    pgfour(),
-  ];
+  late final List<Widget> screens = [const HOwnerHome(), pgtwo(), pgthree(), pgfour()];
 }
