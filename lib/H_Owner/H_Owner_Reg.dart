@@ -133,11 +133,10 @@ class _HOwnerRegState extends State<HOwnerReg> with TickerProviderStateMixin {
     };
 
     try {
-      UserCredential userCred = await FirebaseAuth.instance
-          .createUserWithEmailAndPassword(
-            email: mailController.text.trim(),
-            password: passwordController.text,
-          );
+      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: mailController.text.trim(),
+        password: passwordController.text,
+      );
 
       String safeEmail = mailController.text.trim().replaceAll('.', '_');
 

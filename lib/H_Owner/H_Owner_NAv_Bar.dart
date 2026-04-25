@@ -193,7 +193,6 @@ class _HOwnerNavBarState extends State<HOwnerNavBar> {
 
 class RMNavigControll extends GetxController {
   final Rx<int> selectedIndex = 0.obs;
-  // ignore: non_constant_identifier_names
   final String office_location;
   final String username;
 
