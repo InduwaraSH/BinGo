@@ -1,7 +1,7 @@
+// ignore_for_file: non_constant_identifier_names
+
 import 'dart:ui';
 import 'package:bingo/H_Owner/H_Owner_Home.dart';
-import 'package:bingo/H_Owner/feature/home_screen/presentation/screens/home_page.dart';
-import 'package:bingo/a.dart';
 import 'package:bingo/b.dart';
 import 'package:bingo/c.dart';
 import 'package:bingo/d.dart';
@@ -193,6 +193,7 @@ class _HOwnerNavBarState extends State<HOwnerNavBar> {
 
 class RMNavigControll extends GetxController {
   final Rx<int> selectedIndex = 0.obs;
+  // ignore: non_constant_identifier_names
   final String office_location;
   final String username;
 
@@ -205,5 +206,10 @@ class RMNavigControll extends GetxController {
     {'icon': Iconsax.coin, 'label': 'Payment'},
   ];
 
-  late final List<Widget> screens = [const HOwnerHome(), pgtwo(), pgthree(), pgfour()];
+  late final List<Widget> screens = [
+    const HOwnerHome(),
+    pgtwo(),
+    pgthree(),
+    pgfour(),
+  ];
 }
