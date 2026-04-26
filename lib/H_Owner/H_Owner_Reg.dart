@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
@@ -104,8 +103,57 @@ class _HOwnerRegState extends State<HOwnerReg> with TickerProviderStateMixin {
     super.dispose();
   }
 
+  String? _validateInputs() {
+    if (idController.text.trim().isEmpty ||
+        nameController.text.trim().isEmpty ||
+        mobileController.text.trim().isEmpty ||
+        nicController.text.trim().isEmpty ||
+        addressController.text.trim().isEmpty ||
+        passwordController.text.isEmpty ||
+        mailController.text.trim().isEmpty ||
+        rePasswordController.text.isEmpty) {
+      return 'Please fill in all fields';
+    }
+
+    final email = mailController.text.trim();
+    final emailRegex = RegExp(r'^[\w\.-]+@[\w\.-]+\.\w{2,}$');
+    if (!emailRegex.hasMatch(email)) {
+      return 'Please enter a valid email address';
+    }
+
+    final mobile = mobileController.text.trim();
+    final mobileRegex = RegExp(r'^0\d{9}$');
+    if (!mobileRegex.hasMatch(mobile)) {
+      return 'Mobile must be 10 digits starting with 0 (e.g. 07XXXXXXXX)';
+    }
+
+    final nic = nicController.text.trim();
+    final nicOld = RegExp(r'^\d{9}[VvXx]$');
+    final nicNew = RegExp(r'^\d{12}$');
+    if (!nicOld.hasMatch(nic) && !nicNew.hasMatch(nic)) {
+      return 'NIC must be 9 digits + V/X or 12 digits';
+    }
+
+    if (passwordController.text.length < 6) {
+      return 'Password must be at least 6 characters';
+    }
+
+    if (passwordController.text != rePasswordController.text) {
+      return 'Passwords do not match';
+    }
+
+    return null;
+  }
+
   Future<void> _submitData() async {
     setState(() => _isSubmitting = true);
+
+    final validationError = _validateInputs();
+    if (validationError != null) {
+      _showSnack(validationError, Colors.red);
+      setState(() => _isSubmitting = false);
+      return;
+    }
 
     bool result = await InternetConnection().hasInternetAccess;
     if (!result) {
@@ -114,35 +162,24 @@ class _HOwnerRegState extends State<HOwnerReg> with TickerProviderStateMixin {
       return;
     }
 
-    if (idController.text.isEmpty ||
-        nameController.text.isEmpty ||
-        mobileController.text.isEmpty ||
-        nicController.text.isEmpty ||
-        passwordController.text.isEmpty ||
-        addressController.text.isEmpty ||
-        rePasswordController.text.isEmpty ||
-        passwordController.text != rePasswordController.text) {
-      _showSnack('Please fill all fields correctly', Colors.red);
-      setState(() => _isSubmitting = false);
-      return;
-    }
-
-    Map<String, String> employeeData = {
-      "Name": nameController.text,
+    Map<String, String> ownerData = {
+      "Id": idController.text.trim(),
+      "Name": nameController.text.trim(),
+      "Mobile": mobileController.text.trim(),
       "Type": "House_Owner",
-      "Mail": mailController.text,
+      "Mail": mailController.text.trim(),
+      "Address": addressController.text.trim(),
     };
 
     try {
-      UserCredential userCred = await FirebaseAuth.instance
-          .createUserWithEmailAndPassword(
-            email: mailController.text.trim(),
-            password: passwordController.text,
-          );
+      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: mailController.text.trim(),
+        password: passwordController.text,
+      );
 
       String safeEmail = mailController.text.trim().replaceAll('.', '_');
 
-      await personReference_new.child(safeEmail).set(employeeData);
+      await personReference_new.child(safeEmail).set(ownerData);
       await houseOwnerProfileRef
           .child("House_Profile")
           .child(safeEmail)
@@ -176,9 +213,23 @@ class _HOwnerRegState extends State<HOwnerReg> with TickerProviderStateMixin {
         mailController,
       ].forEach((c) => c.clear());
     } on FirebaseAuthException catch (e) {
-      _showSnack('Error: ${e.message}', Colors.red);
+      String message;
+      switch (e.code) {
+        case 'email-already-in-use':
+          message = 'This email is already registered';
+          break;
+        case 'weak-password':
+          message = 'Password is too weak';
+          break;
+        case 'invalid-email':
+          message = 'Invalid email format';
+          break;
+        default:
+          message = e.message ?? 'Registration failed';
+      }
+      _showSnack(message, Colors.redAccent);
     } catch (e) {
-      _showSnack('Something went wrong', Colors.red);
+      _showSnack('Something went wrong. Please try again.', Colors.redAccent);
     } finally {
       setState(() => _isSubmitting = false);
     }

@@ -1,8 +1,7 @@
 import 'dart:ui';
-import 'package:bingo/a.dart';
-import 'package:bingo/b.dart';
-import 'package:bingo/c.dart';
-import 'package:bingo/d.dart';
+import 'package:bingo/Driver/Dri_Home.dart';
+import 'package:bingo/Driver/Dri_Jobs.dart';
+import 'package:bingo/Driver/Dri_Route.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
@@ -22,14 +21,14 @@ class DriNavBar extends StatefulWidget {
 }
 
 class _DriNavBarState extends State<DriNavBar> {
-  late final RMNavigControll rm_controller;
+  late final DriNavigController _navController;
 
   @override
   void initState() {
     super.initState();
-    Get.delete<RMNavigControll>();
-    rm_controller = Get.put(
-      RMNavigControll(widget.office_location, widget.username),
+    Get.delete<DriNavigController>();
+    _navController = Get.put(
+      DriNavigController(widget.office_location, widget.username),
     );
   }
 
@@ -41,10 +40,7 @@ class _DriNavBarState extends State<DriNavBar> {
         backgroundColor: const Color(0xFFF5F6FA),
         body: Stack(
           children: [
-            // Active screen
-            rm_controller.screens[rm_controller.selectedIndex.value],
-
-            // Floating glass navigation bar
+            _navController.screens[_navController.selectedIndex.value],
             Positioned(
               left: 18,
               right: 18,
@@ -72,109 +68,112 @@ class _DriNavBarState extends State<DriNavBar> {
                             color: Colors.white.withOpacity(0.03),
                           ),
                         ),
-
-                        // navigation row
                         child: Row(
-                          children: List.generate(rm_controller.items.length, (
-                            index,
-                          ) {
-                            final item = rm_controller.items[index];
-                            final bool active =
-                                rm_controller.selectedIndex.value == index;
+                          children: List.generate(
+                            _navController.items.length,
+                            (index) {
+                              final item = _navController.items[index];
+                              final bool active =
+                                  _navController.selectedIndex.value == index;
+                              final int flex = active ? 2 : 1;
 
-                            // active tab takes more space
-                            final int flex = active ? 2 : 1;
-
-                            return Expanded(
-                              flex: flex,
-                              child: GestureDetector(
-                                behavior: HitTestBehavior.opaque,
-                                onTap: () =>
-                                    rm_controller.selectedIndex.value = index,
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 420),
-                                  curve: Curves.easeOutCubic,
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 12,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: active
-                                        ? Colors.white.withOpacity(0.06)
-                                        : Colors.transparent,
-                                    borderRadius: BorderRadius.circular(30),
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    mainAxisSize: MainAxisSize.max,
-                                    children: [
-                                      // Icon with animation
-                                      AnimatedContainer(
-                                        duration: const Duration(
-                                          milliseconds: 320,
-                                        ),
-                                        curve: Curves.easeOut,
-                                        padding: EdgeInsets.all(active ? 8 : 4),
-                                        decoration: BoxDecoration(
-                                          color: active
-                                              ? Colors.white.withOpacity(0.08)
-                                              : Colors.transparent,
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: AnimatedScale(
-                                          scale: active ? 1.25 : 1.0,
+                              return Expanded(
+                                flex: flex,
+                                child: GestureDetector(
+                                  behavior: HitTestBehavior.opaque,
+                                  onTap: () =>
+                                      _navController.selectedIndex.value =
+                                          index,
+                                  child: AnimatedContainer(
+                                    duration:
+                                        const Duration(milliseconds: 420),
+                                    curve: Curves.easeOutCubic,
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 12,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: active
+                                          ? Colors.white.withOpacity(0.06)
+                                          : Colors.transparent,
+                                      borderRadius: BorderRadius.circular(30),
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      mainAxisSize: MainAxisSize.max,
+                                      children: [
+                                        AnimatedContainer(
                                           duration: const Duration(
-                                            milliseconds: 280,
+                                            milliseconds: 320,
                                           ),
-                                          curve: Curves.easeOutBack,
-                                          child: Icon(
-                                            item['icon'],
-                                            size: 24,
+                                          curve: Curves.easeOut,
+                                          padding:
+                                              EdgeInsets.all(active ? 8 : 4),
+                                          decoration: BoxDecoration(
                                             color: active
                                                 ? Colors.white
-                                                : Colors.grey[400],
+                                                    .withOpacity(0.08)
+                                                : Colors.transparent,
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: AnimatedScale(
+                                            scale: active ? 1.25 : 1.0,
+                                            duration: const Duration(
+                                              milliseconds: 280,
+                                            ),
+                                            curve: Curves.easeOutBack,
+                                            child: Icon(
+                                              item['icon'],
+                                              size: 24,
+                                              color: active
+                                                  ? Colors.white
+                                                  : Colors.grey[400],
+                                            ),
                                           ),
                                         ),
-                                      ),
-
-                                      // Label (safe + animated)
-                                      Flexible(
-                                        child: AnimatedSize(
-                                          duration: const Duration(
-                                            milliseconds: 300,
-                                          ),
-                                          curve: Curves.easeInOut,
-                                          child: AnimatedOpacity(
-                                            opacity: active ? 1 : 0,
+                                        Flexible(
+                                          child: AnimatedSize(
                                             duration: const Duration(
                                               milliseconds: 300,
                                             ),
                                             curve: Curves.easeInOut,
-                                            child: Padding(
-                                              padding: EdgeInsets.only(
-                                                left: active ? 7 : 0,
+                                            child: AnimatedOpacity(
+                                              opacity: active ? 1 : 0,
+                                              duration: const Duration(
+                                                milliseconds: 300,
                                               ),
-                                              child: Text(
-                                                active ? item['label'] : '',
-                                                maxLines: 1,
-                                                overflow: TextOverflow.fade,
-                                                softWrap: false,
-                                                style: const TextStyle(
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.w600,
-                                                  fontSize: 14,
-                                                  letterSpacing: 0.2,
+                                              curve: Curves.easeInOut,
+                                              child: Padding(
+                                                padding: EdgeInsets.only(
+                                                  left: active ? 7 : 0,
+                                                ),
+                                                child: Text(
+                                                  active
+                                                      ? item['label']
+                                                      : '',
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.fade,
+                                                  softWrap: false,
+                                                  style: const TextStyle(
+                                                    color: Colors.white,
+                                                    fontWeight:
+                                                        FontWeight.w600,
+                                                    fontSize: 14,
+                                                    letterSpacing: 0.2,
+                                                  ),
                                                 ),
                                               ),
                                             ),
                                           ),
                                         ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
                                 ),
-                              ),
-                            );
-                          }),
+                              );
+                            },
+                          ),
                         ),
                       ),
                     ),
@@ -189,19 +188,22 @@ class _DriNavBarState extends State<DriNavBar> {
   }
 }
 
-class RMNavigControll extends GetxController {
+class DriNavigController extends GetxController {
   final Rx<int> selectedIndex = 0.obs;
-  final String office_location;
-  final String username;
+  final String driverName;
+  final String driverEmail;
 
-  RMNavigControll(this.office_location, this.username);
+  DriNavigController(this.driverName, this.driverEmail);
 
   late final List<Map<String, dynamic>> items = [
     {'icon': Iconsax.home, 'label': 'Home'},
-    {'icon': Iconsax.truck, 'label': 'Route'},
-    {'icon': Iconsax.trash, 'label': 'Jobs'},
-    {'icon': Iconsax.coin, 'label': 'Payment'},
+    {'icon': Iconsax.map, 'label': 'Route'},
+    {'icon': Iconsax.task_square, 'label': 'Jobs'},
   ];
 
-  late final List<Widget> screens = [page(), pgtwo(), pgthree(), pgfour()];
+  late final List<Widget> screens = [
+    DriHome(driverName: driverName, driverEmail: driverEmail),
+    DriRoute(driverEmail: driverEmail, driverName: driverName),
+    DriJobs(driverEmail: driverEmail, driverName: driverName),
+  ];
 }

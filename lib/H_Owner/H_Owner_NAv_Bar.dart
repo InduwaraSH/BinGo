@@ -23,14 +23,14 @@ class HOwnerNavBar extends StatefulWidget {
 }
 
 class _HOwnerNavBarState extends State<HOwnerNavBar> {
-  late final RMNavigControll rm_controller;
+  late final HOwnerNavigController rm_controller;
 
   @override
   void initState() {
     super.initState();
-    Get.delete<RMNavigControll>();
+    Get.delete<HOwnerNavigController>();
     rm_controller = Get.put(
-      RMNavigControll(widget.office_location, widget.username),
+      HOwnerNavigController(widget.office_location, widget.username),
     );
   }
 
@@ -190,12 +190,12 @@ class _HOwnerNavBarState extends State<HOwnerNavBar> {
   }
 }
 
-class RMNavigControll extends GetxController {
+class HOwnerNavigController extends GetxController {
   final Rx<int> selectedIndex = 0.obs;
-  final String office_location;
-  final String username;
+  final String ownerName;
+  final String ownerEmail;
 
-  RMNavigControll(this.office_location, this.username);
+  HOwnerNavigController(this.ownerName, this.ownerEmail);
 
   late final List<Map<String, dynamic>> items = [
     {'icon': Iconsax.home, 'label': 'Home'},

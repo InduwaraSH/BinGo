@@ -16,7 +16,7 @@ class _HOwnerHomeState extends State<HOwnerHome> {
     return Scaffold(
       body: Column(
         children: [
-          SizedBox(height: 100),
+          const SizedBox(height: 100),
           const Center(child: Text('H Owner Home Screen')),
           CupertinoButton(
             child: const Text("Logout"),
@@ -24,7 +24,7 @@ class _HOwnerHomeState extends State<HOwnerHome> {
               FirebaseAuth.instance.signOut().whenComplete(() {
                 Navigator.pushAndRemoveUntil(
                   context,
-                  MaterialPageRoute(builder: (_) => Logging()),
+                  MaterialPageRoute(builder: (_) => const Logging()),
                   (route) => false,
                 );
               });

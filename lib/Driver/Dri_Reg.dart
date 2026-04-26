@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
@@ -23,7 +22,7 @@ class _DriRegState extends State<DriReg> with TickerProviderStateMixin {
   late Animation<Offset> _slideAnim;
 
   late DatabaseReference personReference;
-  late DatabaseReference DeiverProfileRef;
+  late DatabaseReference driverProfileRef;
 
   bool _isSubmitting = false;
 
@@ -41,7 +40,7 @@ class _DriRegState extends State<DriReg> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     personReference = FirebaseDatabase.instance.ref().child("Persons");
-    DeiverProfileRef = FirebaseDatabase.instance.ref().child("Driver_Profiles");
+    driverProfileRef = FirebaseDatabase.instance.ref().child("Driver_Profiles");
 
     // Background animations
     _circleController = AnimationController(
@@ -104,8 +103,57 @@ class _DriRegState extends State<DriReg> with TickerProviderStateMixin {
   }
 
   // ------------------ Logic ------------------
+  String? _validateInputs() {
+    if (idController.text.trim().isEmpty ||
+        nameController.text.trim().isEmpty ||
+        mobileController.text.trim().isEmpty ||
+        nicController.text.trim().isEmpty ||
+        addressController.text.trim().isEmpty ||
+        passwordController.text.isEmpty ||
+        emailController.text.trim().isEmpty ||
+        rePasswordController.text.isEmpty) {
+      return 'Please fill in all fields';
+    }
+
+    final email = emailController.text.trim();
+    final emailRegex = RegExp(r'^[\w\.-]+@[\w\.-]+\.\w{2,}$');
+    if (!emailRegex.hasMatch(email)) {
+      return 'Please enter a valid email address';
+    }
+
+    final mobile = mobileController.text.trim();
+    final mobileRegex = RegExp(r'^0\d{9}$');
+    if (!mobileRegex.hasMatch(mobile)) {
+      return 'Mobile must be 10 digits starting with 0 (e.g. 07XXXXXXXX)';
+    }
+
+    final nic = nicController.text.trim();
+    final nicOld = RegExp(r'^\d{9}[VvXx]$');
+    final nicNew = RegExp(r'^\d{12}$');
+    if (!nicOld.hasMatch(nic) && !nicNew.hasMatch(nic)) {
+      return 'NIC must be 9 digits + V/X or 12 digits';
+    }
+
+    if (passwordController.text.length < 6) {
+      return 'Password must be at least 6 characters';
+    }
+
+    if (passwordController.text != rePasswordController.text) {
+      return 'Passwords do not match';
+    }
+
+    return null;
+  }
+
   Future<void> _submitData() async {
     setState(() => _isSubmitting = true);
+
+    final validationError = _validateInputs();
+    if (validationError != null) {
+      _showSnack(validationError, Colors.red);
+      setState(() => _isSubmitting = false);
+      return;
+    }
 
     bool result = await InternetConnection().hasInternetAccess;
     if (!result) {
@@ -114,50 +162,36 @@ class _DriRegState extends State<DriReg> with TickerProviderStateMixin {
       return;
     }
 
-    if (idController.text.isEmpty ||
-        nameController.text.isEmpty ||
-        mobileController.text.isEmpty ||
-        nicController.text.isEmpty ||
-        addressController.text.isEmpty ||
-        passwordController.text.isEmpty ||
-        emailController.text.isEmpty ||
-        rePasswordController.text.isEmpty ||
-        passwordController.text != rePasswordController.text) {
-      _showSnack('Please fill all fields correctly', Colors.red);
-      setState(() => _isSubmitting = false);
-      return;
-    }
-
     Map<String, String> driverData = {
-      "Id": idController.text,
-      "Name": nameController.text,
-      "Mobile": mobileController.text,
+      "Id": idController.text.trim(),
+      "Name": nameController.text.trim(),
+      "Mobile": mobileController.text.trim(),
       "Type": "Driver",
-      "Mail": emailController.text,
-      "Address": addressController.text,
-      "Password": passwordController.text,
+      "Mail": emailController.text.trim(),
+      "Address": addressController.text.trim(),
     };
 
     try {
-      UserCredential userCred = await FirebaseAuth.instance
-          .createUserWithEmailAndPassword(
-            email: emailController.text.trim(),
-            password: passwordController.text,
-          );
+      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: emailController.text.trim(),
+        password: passwordController.text,
+      );
 
       String safeEmail = emailController.text.trim().replaceAll('.', '_');
 
       await personReference.child(safeEmail).set(driverData);
-      await DeiverProfileRef.child(
-        "House_Profile",
-      ).child(safeEmail).child("Profile_Info").set({
-        "Owner_Name": nameController.text.trim(),
-        "Owner_Mobile": mobileController.text.trim(),
-        "Owner_NIC": nicController.text.trim(),
-        "Owner_Email": emailController.text.trim(),
-        "Owner_Address": addressController.text.trim().replaceAll('/', '_'),
-        "Registered_House_ID": idController.text.trim().replaceAll('/', '_'),
-      });
+      await driverProfileRef
+          .child("Driver_Profile")
+          .child(safeEmail)
+          .child("Profile_Info")
+          .set({
+            "Driver_Name": nameController.text.trim(),
+            "Driver_Mobile": mobileController.text.trim(),
+            "Driver_NIC": nicController.text.trim(),
+            "Driver_Email": emailController.text.trim(),
+            "Driver_Address": addressController.text.trim().replaceAll('/', '_'),
+            "Driver_ID": idController.text.trim().replaceAll('/', '_'),
+          });
       _showSnack(
         '${nameController.text} Registration Request Sent Successfully',
         Colors.green,
@@ -171,8 +205,24 @@ class _DriRegState extends State<DriReg> with TickerProviderStateMixin {
       rePasswordController.clear();
       emailController.clear();
       addressController.clear();
+    } on FirebaseAuthException catch (e) {
+      String message;
+      switch (e.code) {
+        case 'email-already-in-use':
+          message = 'This email is already registered';
+          break;
+        case 'weak-password':
+          message = 'Password is too weak';
+          break;
+        case 'invalid-email':
+          message = 'Invalid email format';
+          break;
+        default:
+          message = e.message ?? 'Registration failed';
+      }
+      _showSnack(message, Colors.redAccent);
     } catch (error) {
-      _showSnack("Failed to save data: $error", Colors.redAccent);
+      _showSnack("Something went wrong. Please try again.", Colors.redAccent);
     } finally {
       setState(() => _isSubmitting = false);
     }
