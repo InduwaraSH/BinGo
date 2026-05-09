@@ -3,7 +3,6 @@ import 'payment/payment_method.dart';
 import 'H_Owner_Profile_edit.dart';
 import 'H_Owner_Profile_Setting.dart';
 import 'H_Owner_Profile_Privacy.dart';
-import 'H_Owner_Profile_FAQ.dart';
 
 class HOwnerProfile extends StatefulWidget {
   const HOwnerProfile({super.key});
@@ -140,11 +139,7 @@ class _HOwnerProfileState extends State<HOwnerProfile> {
                     icon: Icons.help,
                     label: 'Help',
                     onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const HOwnerProfileFAQ(),
-                        ),
-                      );
+                      // TODO: Navigate to Help
                     },
                   ),
                   const SizedBox(height: 12),
