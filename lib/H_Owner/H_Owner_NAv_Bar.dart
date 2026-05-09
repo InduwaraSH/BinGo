@@ -1,9 +1,6 @@
 import 'dart:ui';
 import 'package:bingo/H_Owner/H_Owner_Home.dart';
 import 'package:bingo/H_Owner/payment/payment_method.dart';
-import 'package:bingo/H_Owner/payment/payment_page.dart';
-import 'package:bingo/H_Owner/payment/add_card.dart';
-import 'package:bingo/H_Owner/payment/payment_success.dart';
 import 'package:bingo/a.dart';
 import 'package:bingo/b.dart';
 import 'package:bingo/c.dart';
@@ -95,7 +92,12 @@ class _HOwnerNavBarState extends State<HOwnerNavBar> {
                               child: GestureDetector(
                                   behavior: HitTestBehavior.opaque,
                                   onTap: () {
-                                    rm_controller.selectedIndex.value = index;
+                                    // If Payment tab tapped, open PaymentMethod page instead
+                                    if (item['label'] == 'Payment') {
+                                      Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PaymentMethodPage()));
+                                    } else {
+                                      rm_controller.selectedIndex.value = index;
+                                    }
                                   },
                                 child: AnimatedContainer(
                                   duration: const Duration(milliseconds: 420),
@@ -205,7 +207,7 @@ class _HOwnerNavBarState extends State<HOwnerNavBar> {
       case 2:
         return pgthree();
       case 3:
-        return const PaymentPage();
+        return pgfour();
       default:
         return HOwnerHome(key: ValueKey(widget.username), displayName: widget.office_location);
     }
@@ -230,6 +232,6 @@ class RMNavigControll extends GetxController {
       HOwnerHome(displayName: username),
         pgtwo(),
         pgthree(),
-        const PaymentPage(),
+        pgfour(),
       ];
 }

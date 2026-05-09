@@ -2,7 +2,6 @@ import 'package:bingo/Common/Logging.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'H_Owner_Profile.dart';
 
 class HOwnerHome extends StatefulWidget {
   final String? displayName;
@@ -48,14 +47,7 @@ class _HOwnerHomeState extends State<HOwnerHome> {
               // Header / greeting row
               Row(
                 children: [
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const HOwnerProfile()),
-                      );
-                    },
-                    child: const CircleAvatar(radius: 22, backgroundImage: AssetImage('assets/avatar.png')),
-                  ),
+                  const CircleAvatar(radius: 22, backgroundImage: AssetImage('assets/avatar.png')),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
