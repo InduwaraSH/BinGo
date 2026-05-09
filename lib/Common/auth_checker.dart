@@ -1,6 +1,6 @@
 import 'package:bingo/Common/Logging.dart';
 import 'package:bingo/Driver/Dri_Nav_Bar.dart';
-import 'package:bingo/H_Owner/H_Owner_NAv_Bar.dart';
+import 'package:bingo/H_Owner/h_owner_nav_bar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
