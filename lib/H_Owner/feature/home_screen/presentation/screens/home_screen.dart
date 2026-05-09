@@ -2,10 +2,12 @@ import 'package:bingo/H_Owner/feature/home_screen/presentation/bloc/home_cubit.d
 import 'package:bingo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:bingo/H_Owner/feature/home_screen/presentation/widgets/user_header.dart';
-import 'package:bingo/H_Owner/feature/home_screen/presentation/widgets/current_tracking_card.dart';
-import 'package:bingo/H_Owner/feature/home_screen/presentation/widgets/features_row.dart';
-import 'package:bingo/H_Owner/feature/home_screen/presentation/widgets/recent_activities.dart';
+
+import '../widgets/user_header.dart';
+import '../widgets/search_section.dart';
+import '../widgets/current_tracking_card.dart';
+import '../widgets/features_row.dart';
+import '../widgets/recent_activities.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
