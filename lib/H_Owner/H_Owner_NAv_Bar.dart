@@ -1,10 +1,11 @@
 // ignore_for_file: non_constant_identifier_names
 
 import 'dart:ui';
-import 'package:bingo/H_Owner/H_Owner_Home.dart';
+import 'package:bingo/H_Owner/h_owner_home.dart';
+import 'package:bingo/H_Owner/feature/payment/presentation/pages/payment_history_page.dart';
+import 'package:bingo/H_Owner/feature/profile_mainatin/presentation/widgets/h_owner_profile_drawer.dart';
 import 'package:bingo/b.dart';
 import 'package:bingo/c.dart';
-import 'package:bingo/d.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
@@ -41,6 +42,9 @@ class _HOwnerNavBarState extends State<HOwnerNavBar> {
       () => Scaffold(
         extendBody: true,
         backgroundColor: const Color(0xFFF5F6FA),
+        drawer: HOwnerProfileDrawer(
+          userProfile: rm_controller.userProfile.value,
+        ),
         body: Stack(
           children: [
             // Active screen
@@ -193,6 +197,7 @@ class _HOwnerNavBarState extends State<HOwnerNavBar> {
 
 class RMNavigControll extends GetxController {
   final Rx<int> selectedIndex = 0.obs;
+  final Rx<Map<String, dynamic>> userProfile = Rx<Map<String, dynamic>>({});
   final String office_location;
   final String username;
 
@@ -209,6 +214,6 @@ class RMNavigControll extends GetxController {
     const HOwnerHome(),
     pgtwo(),
     pgthree(),
-    pgfour(),
+    const PaymentHistoryPage(),
   ];
 }

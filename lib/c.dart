@@ -1,4 +1,4 @@
-import 'package:bingo/H_Owner/Job_Details_Screen.dart';
+import 'package:bingo/H_Owner/job_details_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -35,35 +35,35 @@ class _pgthreeState extends State<pgthree> with SingleTickerProviderStateMixin {
         .collection('requests')
         .where('userEmail', isEqualTo: user.email)
         .snapshots()
-        .listen((snapshot) {
-      if (mounted) {
-        setState(() {
-          var docs = snapshot.docs.map((doc) {
-            return {
-              'id': doc.id,
-              ...doc.data(),
-            };
-          }).toList();
+        .listen(
+          (snapshot) {
+            if (mounted) {
+              setState(() {
+                var docs = snapshot.docs.map((doc) {
+                  return {'id': doc.id, ...doc.data()};
+                }).toList();
 
-          docs.sort((a, b) {
-            Timestamp? tA = a['requestedDateTime'] as Timestamp?;
-            Timestamp? tB = b['requestedDateTime'] as Timestamp?;
-            if (tA == null && tB == null) return 0;
-            if (tA == null) return 1;
-            if (tB == null) return -1;
-            return tB.compareTo(tA);
-          });
+                docs.sort((a, b) {
+                  Timestamp? tA = a['requestedDateTime'] as Timestamp?;
+                  Timestamp? tB = b['requestedDateTime'] as Timestamp?;
+                  if (tA == null && tB == null) return 0;
+                  if (tA == null) return 1;
+                  if (tB == null) return -1;
+                  return tB.compareTo(tA);
+                });
 
-          _allRequests = docs;
-          _isLoading = false;
-        });
-      }
-    }, onError: (error) {
-      print("Error fetching jobs: $error");
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    });
+                _allRequests = docs;
+                _isLoading = false;
+              });
+            }
+          },
+          onError: (error) {
+            print("Error fetching jobs: $error");
+            if (mounted) {
+              setState(() => _isLoading = false);
+            }
+          },
+        );
   }
 
   @override
@@ -112,7 +112,10 @@ class _pgthreeState extends State<pgthree> with SingleTickerProviderStateMixin {
                 dividerColor: Colors.transparent,
                 labelColor: Colors.white,
                 unselectedLabelColor: Colors.white54,
-                labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                labelStyle: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
                 tabs: const [
                   Tab(text: 'Pending'),
                   Tab(text: 'Completed'),
@@ -124,7 +127,9 @@ class _pgthreeState extends State<pgthree> with SingleTickerProviderStateMixin {
             Expanded(
               child: _isLoading
                   ? const Center(
-                      child: CircularProgressIndicator(color: Color(0xFF00B4FF)),
+                      child: CircularProgressIndicator(
+                        color: Color(0xFF00B4FF),
+                      ),
                     )
                   : TabBarView(
                       controller: _tabController,
@@ -152,7 +157,10 @@ class _pgthreeState extends State<pgthree> with SingleTickerProviderStateMixin {
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8).copyWith(bottom: 100),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 20,
+        vertical: 8,
+      ).copyWith(bottom: 100),
       itemCount: filteredList.length,
       itemBuilder: (context, index) {
         return _buildJobCard(filteredList[index], filterStatus);
@@ -162,7 +170,7 @@ class _pgthreeState extends State<pgthree> with SingleTickerProviderStateMixin {
 
   Widget _buildJobCard(Map<String, dynamic> request, String currentStatus) {
     String typeStr = request['garbageType'] ?? '';
-    
+
     String typeDisplay = 'Unknown';
     IconData typeIcon = Iconsax.box;
     Color typeColor = Colors.white54;
@@ -197,7 +205,7 @@ class _pgthreeState extends State<pgthree> with SingleTickerProviderStateMixin {
       } else if (request['requestedDateTime'] != null) {
         displayDate = (request['requestedDateTime'] as Timestamp).toDate();
       }
-      
+
       if (currentStatus == 'collected') {
         dateLabel = 'Completed on:';
       } else {
@@ -281,7 +289,11 @@ class _pgthreeState extends State<pgthree> with SingleTickerProviderStateMixin {
               children: [
                 Text(
                   'ID: ${request['id'].substring(0, 8).toUpperCase()}${request['weightInKg'] != null ? ' • ${request['weightInKg']}kg' : ''}',
-                  style: const TextStyle(color: Colors.white54, fontSize: 12, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    color: Colors.white54,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 if (request['userAddress'] != null)
                   Expanded(
@@ -289,11 +301,14 @@ class _pgthreeState extends State<pgthree> with SingleTickerProviderStateMixin {
                       request['userAddress'],
                       textAlign: TextAlign.right,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: Colors.white70, fontSize: 12),
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12,
+                      ),
                     ),
                   ),
               ],
-            )
+            ),
           ],
         ),
       ),
