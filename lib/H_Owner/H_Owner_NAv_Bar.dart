@@ -93,7 +93,7 @@ class _HOwnerNavBarState extends State<HOwnerNavBar> {
                                   behavior: HitTestBehavior.opaque,
                                   onTap: () {
                                     // If Payment tab tapped, open PaymentMethod page instead
-                                    if (item['label'] == 'Payment') {
+                                    if (item['label'] == 'Payment' || index == 3) {
                                       Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PaymentMethodPage()));
                                     } else {
                                       rm_controller.selectedIndex.value = index;
