@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
 import 'payment/payment_method.dart';
-import 'H_Owner_Profile_edit.dart';
-import 'H_Owner_Profile_Setting.dart';
-import 'H_Owner_Profile_Privacy.dart';
 
 class HOwnerProfile extends StatefulWidget {
   const HOwnerProfile({super.key});
@@ -85,9 +82,7 @@ class _HOwnerProfileState extends State<HOwnerProfile> {
                     icon: Icons.person,
                     label: 'Profile',
                     onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const HOwnerProfileEdit()),
-                      );
+                      // TODO: Navigate to Profile
                     },
                   ),
                   const SizedBox(height: 12),
@@ -115,11 +110,7 @@ class _HOwnerProfileState extends State<HOwnerProfile> {
                     icon: Icons.lock,
                     label: 'Privacy Policy',
                     onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const HOwnerProfilePrivacy(),
-                        ),
-                      );
+                      // TODO: Navigate to Privacy Policy
                     },
                   ),
                   const SizedBox(height: 12),
@@ -127,11 +118,7 @@ class _HOwnerProfileState extends State<HOwnerProfile> {
                     icon: Icons.settings,
                     label: 'Settings',
                     onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const HOwnerProfileSetting(),
-                        ),
-                      );
+                      // TODO: Navigate to Settings
                     },
                   ),
                   const SizedBox(height: 12),
