@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'H_Owner_Profile.dart';
-import 'models/job_model.dart';
 
 class HOwnerHome extends StatefulWidget {
   final String? displayName;
@@ -183,20 +182,7 @@ class _HOwnerHomeState extends State<HOwnerHome> {
                               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please fill required fields')));
                               return;
                             }
-                            
-                            // Create and add job to global list
-                            final newJob = Job(
-                              fullName: _jobFullNameController.text,
-                              address: _jobAddressController.text,
-                              contact: _jobContactController.text,
-                              type: _jobTypeController.text,
-                              weight: _jobWeightController.text,
-                              dateCreated: DateTime.now(),
-                            );
-                            
-                            jobsList.add(newJob);
-                            
-                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Job added successfully')));
+                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Job added')));
                             setState(() {
                               _jobFullNameController.clear();
                               _jobAddressController.clear();
