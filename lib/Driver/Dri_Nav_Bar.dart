@@ -3,6 +3,7 @@ import 'package:bingo/a.dart';
 import 'package:bingo/b.dart';
 import 'package:bingo/c.dart';
 import 'package:bingo/d.dart';
+import 'package:bingo/Driver/Driver_Home.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
@@ -203,5 +204,5 @@ class RMNavigControll extends GetxController {
     {'icon': Iconsax.coin, 'label': 'Payment'},
   ];
 
-  late final List<Widget> screens = [page(), pgtwo(), pgthree(), pgfour()];
+  late final List<Widget> screens = [DriverHome(username: username), pgtwo(), pgthree(), pgfour()];
 }
