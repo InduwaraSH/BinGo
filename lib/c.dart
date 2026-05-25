@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:bingo/H_Owner/job_details_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -5,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
 
+// ignore: camel_case_types
 class pgthree extends StatefulWidget {
   const pgthree({super.key});
 
@@ -12,6 +15,7 @@ class pgthree extends StatefulWidget {
   State<pgthree> createState() => _pgthreeState();
 }
 
+// ignore: camel_case_types
 class _pgthreeState extends State<pgthree> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   bool _isLoading = true;
@@ -58,7 +62,7 @@ class _pgthreeState extends State<pgthree> with SingleTickerProviderStateMixin {
             }
           },
           onError: (error) {
-            print("Error fetching jobs: $error");
+            debugPrint("Error fetching jobs: $error");
             if (mounted) {
               setState(() => _isLoading = false);
             }
