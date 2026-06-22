@@ -9,17 +9,20 @@ class DriverUserHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        const CircleAvatar(
+        CircleAvatar(
           radius: 24,
-          backgroundImage: NetworkImage(
-            'https://i.pravatar.cc/150?img=13',
-          ), // Placeholder image
+          backgroundColor: AppColors.darkCard,
+          child: Icon(
+            Icons.person,
+            color: AppColors.accentGreen,
+            size: 28,
+          ),
         ),
         const SizedBox(width: 12),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Driver Name', style: AppTextStyles.heading1),
+            const Text('Driver', style: AppTextStyles.heading1),
             const SizedBox(height: 4),
             Row(
               children: [
@@ -46,6 +49,15 @@ class DriverUserHeader extends StatelessWidget {
             color: AppColors.textPrimary,
           ),
           onPressed: () {},
+        ),
+        IconButton(
+          icon: const Icon(
+            Icons.menu,
+            color: AppColors.textPrimary,
+          ),
+          onPressed: () {
+            Scaffold.of(context).openDrawer();
+          },
         ),
       ],
     );

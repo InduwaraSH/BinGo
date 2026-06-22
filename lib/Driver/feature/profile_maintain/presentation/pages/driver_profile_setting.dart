@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'driver_notification_setting.dart';
 import 'driver_password_manager.dart';
 import 'driver_delete_account.dart';
+import 'driver_profile_edit.dart';
+import 'driver_profile_privacy.dart';
 
 class DriverProfileSetting extends StatefulWidget {
   const DriverProfileSetting({super.key});
@@ -37,7 +39,58 @@ class _DriverProfileSettingState extends State<DriverProfileSetting> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const SizedBox(height: 20),
+            // Profile Header with clickable avatar
+            Center(
+              child: Column(
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: CircleAvatar(
+                      radius: 50,
+                      backgroundColor: const Color(0xFF1a2b3c),
+                      child: Icon(
+                        Icons.person,
+                        color: Colors.grey[400],
+                        size: 60,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Driver Profile',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'driver@bingo.com',
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 30),
+            // Profile Edit
+            _buildSettingItem(
+              icon: Icons.person_outline,
+              label: 'Edit Profile',
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const DriverProfileEdit(),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 16),
             // Notification Setting
             _buildSettingItem(
               icon: Icons.notifications_outlined,
@@ -59,6 +112,19 @@ class _DriverProfileSettingState extends State<DriverProfileSetting> {
                 Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (_) => const DriverPasswordManager(),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 16),
+            // Privacy Policy
+            _buildSettingItem(
+              icon: Icons.privacy_tip_outlined,
+              label: 'Privacy Policy',
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const DriverProfilePrivacy(),
                   ),
                 );
               },

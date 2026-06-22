@@ -7,22 +7,27 @@ class DriverHomeCubit extends Cubit<DriverHomeState> {
   DriverHomeCubit() : super(DriverHomeInitial());
 
   void fetchDashboardData() async {
+    if (isClosed) return;
     emit(DriverHomeLoading());
 
     try {
       // Simulating an API call delay
       await Future.delayed(const Duration(seconds: 2));
 
-      // Emitting success state with dummy data
-      emit(
-        DriverHomeLoaded(
-          activeDeliveryNumber: '#DRV01-EUFD24C',
-          currentLocation: 'Condong Catur, Yogyakarta',
-          status: 'in transit',
-        ),
-      );
+      // Only emit if the cubit is still open
+      if (!isClosed) {
+        emit(
+          DriverHomeLoaded(
+            activeDeliveryNumber: '#DRV01-EUFD24C',
+            currentLocation: 'Condong Catur, Yogyakarta',
+            status: 'in transit',
+          ),
+        );
+      }
     } catch (e) {
-      emit(DriverHomeError('Failed to load delivery data.'));
+      if (!isClosed) {
+        emit(DriverHomeError('Failed to load delivery data.'));
+      }
     }
   }
 }
