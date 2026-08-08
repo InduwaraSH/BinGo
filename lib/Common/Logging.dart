@@ -499,6 +499,9 @@ class _LoggingState extends State<Logging> with TickerProviderStateMixin {
       child: TextField(
         controller: controller,
         obscureText: isPassword ? obscurePassword : false,
+        keyboardAppearance: Brightness.dark,
+        textInputAction: isPassword ? TextInputAction.done : TextInputAction.next,
+        onSubmitted: (_) => FocusScope.of(context).unfocus(),
         style: const TextStyle(color: Colors.white),
         cursorColor: Colors.blueAccent,
         decoration: InputDecoration(
