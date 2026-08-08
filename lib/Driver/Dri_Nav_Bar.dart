@@ -1,11 +1,12 @@
 import 'dart:ui';
-import 'package:bingo/a.dart';
-import 'package:bingo/b.dart';
-import 'package:bingo/c.dart';
-import 'package:bingo/d.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
+import 'Dri_Home.dart';
+import 'Dri_Jobs.dart';
+import 'Dri_Route_Map.dart';
+import 'driver_session.dart';
+import 'driver_tracking_gate.dart';
 
 class DriNavBar extends StatefulWidget {
   final String office_location;
@@ -23,11 +24,14 @@ class DriNavBar extends StatefulWidget {
 
 class _DriNavBarState extends State<DriNavBar> {
   late final RMNavigControll rm_controller;
+  late final DriverSessionController driverSession;
 
   @override
   void initState() {
     super.initState();
     Get.delete<RMNavigControll>();
+    Get.delete<DriverSessionController>();
+    driverSession = Get.put(DriverSessionController());
     rm_controller = Get.put(
       RMNavigControll(widget.office_location, widget.username),
     );
@@ -35,7 +39,9 @@ class _DriNavBarState extends State<DriNavBar> {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(
+    return DriverTrackingGate(
+      session: driverSession,
+      child: Obx(
       () => Scaffold(
         extendBody: true,
         backgroundColor: const Color(0xFFF5F6FA),
@@ -185,6 +191,7 @@ class _DriNavBarState extends State<DriNavBar> {
           ],
         ),
       ),
+      ),
     );
   }
 }
@@ -200,8 +207,7 @@ class RMNavigControll extends GetxController {
     {'icon': Iconsax.home, 'label': 'Home'},
     {'icon': Iconsax.truck, 'label': 'Route'},
     {'icon': Iconsax.trash, 'label': 'Jobs'},
-    {'icon': Iconsax.coin, 'label': 'Payment'},
   ];
 
-  late final List<Widget> screens = [page(), pgtwo(), pgthree(), pgfour()];
+  late final List<Widget> screens = [const DriHome(), const DriRouteMap(), const DriJobs()];
 }

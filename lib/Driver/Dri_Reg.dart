@@ -1,5 +1,6 @@
 // ignore_for_file: non_constant_identifier_names
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
@@ -158,6 +159,24 @@ class _DriRegState extends State<DriReg> with TickerProviderStateMixin {
         "Owner_Address": addressController.text.trim().replaceAll('/', '_'),
         "Registered_House_ID": idController.text.trim().replaceAll('/', '_'),
       });
+
+      // File this as a pending registration request for admin to review —
+      // it does NOT go straight into the Driver Fleet. Admin approval is
+      // what actually creates the `drivers` doc (see admin User Management).
+      final normalizedEmail = emailController.text.trim().toLowerCase();
+      await FirebaseFirestore.instance
+          .collection('registration_requests')
+          .doc('driver_$safeEmail')
+          .set({
+        'type': 'driver',
+        'status': 'pending',
+        'nic': nicController.text.trim(),
+        'name': nameController.text.trim(),
+        'mobile': mobileController.text.trim(),
+        'email': normalizedEmail,
+        'submittedAt': FieldValue.serverTimestamp(),
+      });
+
       _showSnack(
         '${nameController.text} Registration Request Sent Successfully',
         Colors.green,

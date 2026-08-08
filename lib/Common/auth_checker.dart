@@ -1,6 +1,8 @@
 import 'package:bingo/Common/Logging.dart';
+import 'package:bingo/Common/registration_status.dart';
 import 'package:bingo/Driver/Dri_Nav_Bar.dart';
 import 'package:bingo/H_Owner/h_owner_nav_bar.dart';
+import 'package:bingo/H_Owner/H_Owner_Pending_Approval.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
@@ -53,6 +55,15 @@ class _AuthCheckerState extends State<AuthChecker> {
       if (snapshotType.exists && snapshotName.exists) {
         String type = snapshotType.value.toString();
         String name = snapshotName.value.toString();
+
+        if (type == 'House_Owner') {
+          final approvalStatus = await checkApprovalStatus('house_owner', user.email!);
+          if (!mounted) return;
+          if (approvalStatus != null) {
+            setState(() => _targetScreen = HOwnerPendingApproval(isRejected: approvalStatus == 'rejected'));
+            return;
+          }
+        }
 
         if (mounted) {
           if (type == 'House_Owner') {
