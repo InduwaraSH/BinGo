@@ -1,5 +1,5 @@
 import 'package:bingo/Driver/Dri_Reg.dart';
-import 'package:bingo/H_Owner/H_Owner_Reg.dart';
+import 'package:bingo/H_Owner/h_owner_reg.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';

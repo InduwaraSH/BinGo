@@ -1,14 +1,11 @@
+// ignore_for_file: non_constant_identifier_names
+
 import 'dart:ui';
-import 'package:bingo/H_Owner/H_Owner_Home.dart';
-import 'package:bingo/H_Owner/H_Owner_Jobs.dart';
-import 'package:bingo/H_Owner/payment/payment_method.dart';
-import 'package:bingo/H_Owner/payment/payment_page.dart';
-import 'package:bingo/H_Owner/payment/add_card.dart';
-import 'package:bingo/H_Owner/payment/payment_success.dart';
-import 'package:bingo/a.dart';
-import 'package:bingo/b.dart';
+import 'package:bingo/H_Owner/h_owner_home.dart';
+import 'package:bingo/H_Owner/feature/payment/presentation/pages/payment_history_page.dart';
+import 'package:bingo/H_Owner/feature/profile_mainatin/presentation/widgets/h_owner_profile_drawer.dart';
+import 'package:bingo/H_Owner/H_Owner_Route_Tab.dart';
 import 'package:bingo/c.dart';
-import 'package:bingo/d.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
@@ -45,6 +42,9 @@ class _HOwnerNavBarState extends State<HOwnerNavBar> {
       () => Scaffold(
         extendBody: true,
         backgroundColor: const Color(0xFFF5F6FA),
+        drawer: HOwnerProfileDrawer(
+          userProfile: rm_controller.userProfile.value,
+        ),
         body: Stack(
           children: [
             // Active screen (built on demand to ensure latest code is used)
@@ -215,6 +215,7 @@ class _HOwnerNavBarState extends State<HOwnerNavBar> {
 
 class RMNavigControll extends GetxController {
   final Rx<int> selectedIndex = 0.obs;
+  final Rx<Map<String, dynamic>> userProfile = Rx<Map<String, dynamic>>({});
   final String office_location;
   final String username;
 
@@ -227,10 +228,10 @@ class RMNavigControll extends GetxController {
     {'icon': Iconsax.coin, 'label': 'Payment'},
   ];
 
-  List<Widget> get screens => [
-      HOwnerHome(displayName: username),
-        pgtwo(),
-        const HOwnerJobs(),
-        const PaymentPage(),
-      ];
+  late final List<Widget> screens = [
+    const HOwnerHome(),
+    const HOwnerRouteTab(),
+    pgthree(),
+    const PaymentHistoryPage(),
+  ];
 }

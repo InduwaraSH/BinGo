@@ -1,6 +1,6 @@
 import 'package:bingo/Common/UserIdentifier.dart';
 import 'package:bingo/Driver/Dri_Nav_Bar.dart';
-import 'package:bingo/H_Owner/H_Owner_NAv_Bar.dart';
+import 'package:bingo/H_Owner/h_owner_nav_bar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/cupertino.dart';
@@ -501,6 +501,9 @@ class _LoggingState extends State<Logging> with TickerProviderStateMixin {
       child: TextField(
         controller: controller,
         obscureText: isPassword ? obscurePassword : false,
+        keyboardAppearance: Brightness.dark,
+        textInputAction: isPassword ? TextInputAction.done : TextInputAction.next,
+        onSubmitted: (_) => FocusScope.of(context).unfocus(),
         style: const TextStyle(color: Colors.white),
         cursorColor: Colors.blueAccent,
         decoration: InputDecoration(
