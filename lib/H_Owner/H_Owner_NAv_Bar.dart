@@ -47,8 +47,8 @@ class _HOwnerNavBarState extends State<HOwnerNavBar> {
         ),
         body: Stack(
           children: [
-            // Active screen (built on demand to ensure latest code is used)
-            _activeScreen(),
+            // Active screen
+            rm_controller.screens[rm_controller.selectedIndex.value],
 
             // Floating glass navigation bar
             Positioned(
@@ -195,22 +195,6 @@ class _HOwnerNavBarState extends State<HOwnerNavBar> {
     );
   }
 
-  Widget _activeScreen() {
-    final idx = rm_controller.selectedIndex.value;
-    switch (idx) {
-      case 0:
-        // Key the home by username so a fresh instance is created per user/login.
-        return HOwnerHome(key: ValueKey(widget.username), displayName: widget.office_location);
-      case 1:
-        return pgtwo();
-      case 2:
-        return const HOwnerJobs();
-      case 3:
-        return const PaymentPage();
-      default:
-        return HOwnerHome(key: ValueKey(widget.username), displayName: widget.office_location);
-    }
-  }
 }
 
 class RMNavigControll extends GetxController {
