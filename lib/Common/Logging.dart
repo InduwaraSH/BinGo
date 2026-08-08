@@ -341,10 +341,12 @@ class _LoggingState extends State<Logging> with TickerProviderStateMixin {
                                     ),
                                   );
                                 } finally {
-                                  setState(() {
-                                    isVisibleButton = true;
-                                    isVisibleLoading = false;
-                                  });
+                                  if (mounted) {
+                                    setState(() {
+                                      isVisibleButton = true;
+                                      isVisibleLoading = false;
+                                    });
+                                  }
                                 }
                               },
                               child: Container(

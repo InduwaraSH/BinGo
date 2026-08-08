@@ -14,7 +14,9 @@ import 'H_Owner_Tracking_Map.dart';
 import 'pickup_location_picker.dart';
 
 class HOwnerHome extends StatefulWidget {
-  const HOwnerHome({super.key});
+  final String? displayName;
+
+  const HOwnerHome({super.key, this.displayName});
 
   @override
   State<HOwnerHome> createState() => _HOwnerHomeState();
