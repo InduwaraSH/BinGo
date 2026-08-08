@@ -5,7 +5,9 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'H_Owner_NAv_Bar.dart';
 
 class HOwnerHome extends StatefulWidget {
   const HOwnerHome({super.key});
@@ -22,7 +24,6 @@ class _HOwnerHomeState extends State<HOwnerHome> with TickerProviderStateMixin {
 
   bool _isLoading = true;
   Map<String, dynamic> _userProfile = {};
-  List<Map<String, dynamic>> _myRequests = [];
   String? _currentUserEmail;
   String? _safeEmail;
 
@@ -79,48 +80,26 @@ class _HOwnerHomeState extends State<HOwnerHome> with TickerProviderStateMixin {
           .once();
 
       if (event.snapshot.value != null) {
-        setState(() {
-          _userProfile = Map<String, dynamic>.from(event.snapshot.value as Map);
-        });
-      }
-
-      // Listen to Firestore requests
-      FirebaseFirestore.instance
-          .collection('requests')
-          .where('userEmail', isEqualTo: _currentUserEmail)
-          .snapshots()
-          .listen((snapshot) {
-        setState(() {
-          var docs = snapshot.docs.map((doc) {
-            return {
-              'id': doc.id,
-              ...doc.data(),
-            };
-          }).toList();
-
-          docs.sort((a, b) {
-            Timestamp? tA = a['requestedDateTime'] as Timestamp?;
-            Timestamp? tB = b['requestedDateTime'] as Timestamp?;
-            if (tA == null && tB == null) return 0;
-            if (tA == null) return 1;
-            if (tB == null) return -1;
-            return tB.compareTo(tA);
+        final profileData = Map<String, dynamic>.from(event.snapshot.value as Map);
+        if (mounted) {
+          setState(() {
+            _userProfile = profileData;
+            _isLoading = false;
           });
-
-          _myRequests = docs.take(2).toList();
-          _isLoading = false;
-        });
-      }, onError: (error) {
-        print("Firestore stream error: $error");
-        setState(() {
-          _isLoading = false;
-        });
-      });
+        }
+        if (Get.isRegistered<RMNavigControll>()) {
+          Get.find<RMNavigControll>().userProfile.value = profileData;
+        }
+      } else {
+        if (mounted) {
+          setState(() => _isLoading = false);
+        }
+      }
     } catch (e) {
-      print("Error fetching data: $e");
-      setState(() {
-        _isLoading = false;
-      });
+      print("Error fetching profile: $e");
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -412,9 +391,9 @@ class _HOwnerHomeState extends State<HOwnerHome> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF07121A),
-      body: Stack(
+    return Container(
+      color: const Color(0xFF07121A),
+      child: Stack(
         children: [
           _buildAnimatedBackground(),
           SafeArea(
@@ -470,21 +449,61 @@ class _HOwnerHomeState extends State<HOwnerHome> with TickerProviderStateMixin {
                 ),
                 const SizedBox(height: 16),
                 Expanded(
-                  child: _isLoading
-                      ? const Center(
+                  child: StreamBuilder<QuerySnapshot>(
+                    stream: FirebaseFirestore.instance
+                        .collection('requests')
+                        .where('userEmail', isEqualTo: FirebaseAuth.instance.currentUser?.email)
+                        .snapshots(),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasError) {
+                        return Center(child: Text('Error: ${snapshot.error}', style: const TextStyle(color: Colors.red)));
+                      }
+
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(
                           child: CircularProgressIndicator(
                             color: Color(0xFF00B4FF),
                           ),
-                        )
-                      : _myRequests.isEmpty
-                          ? _buildEmptyState()
-                          : ListView.builder(
-                              padding: const EdgeInsets.symmetric(horizontal: 20),
-                              itemCount: _myRequests.length,
-                              itemBuilder: (context, index) {
-                                return _buildRequestCard(_myRequests[index]);
-                              },
-                            ),
+                        );
+                      }
+
+                      var docs = snapshot.data!.docs.map((doc) {
+                        return {
+                          'id': doc.id,
+                          ...doc.data() as Map<String, dynamic>,
+                        };
+                      }).toList();
+
+                      // Sort by date
+                      docs.sort((a, b) {
+                        final aTime = a['requestedDateTime'];
+                        final bTime = b['requestedDateTime'];
+                        Timestamp? tA = aTime is Timestamp ? aTime : null;
+                        Timestamp? tB = bTime is Timestamp ? bTime : null;
+                        if (tA == null && tB == null) return 0;
+                        if (tA == null) return 1;
+                        if (tB == null) return -1;
+                        return tB.compareTo(tA);
+                      });
+
+                      if (docs.isEmpty) {
+                        return _buildEmptyState();
+                      }
+
+                      // Show only the latest 2 requests
+                      var recentDocs = docs.take(2).toList();
+
+                      return ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        shrinkWrap: true, // Add shrinkWrap as it's often better for small lists in Column
+                        physics: const NeverScrollableScrollPhysics(), // Disable scrolling as it's a fixed small list
+                        itemCount: recentDocs.length,
+                        itemBuilder: (context, index) {
+                          return _buildRequestCard(recentDocs[index]);
+                        },
+                      );
+                    },
+                  ),
                 ),
               ],
             ),
@@ -521,8 +540,9 @@ class _HOwnerHomeState extends State<HOwnerHome> with TickerProviderStateMixin {
     if (statusStr == 'rejected') statusColor = Colors.red;
 
     DateTime? reqDate;
-    if (request['requestedDateTime'] != null) {
-      reqDate = (request['requestedDateTime'] as Timestamp).toDate();
+    final rDate = request['requestedDateTime'];
+    if (rDate is Timestamp) {
+      reqDate = rDate.toDate();
     }
 
     return Container(
@@ -539,42 +559,51 @@ class _HOwnerHomeState extends State<HOwnerHome> with TickerProviderStateMixin {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: typeColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(10),
+              Expanded(
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: typeColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(typeIcon, color: typeColor, size: 20),
                     ),
-                    child: Icon(typeIcon, color: typeColor, size: 20),
-                  ),
-                  const SizedBox(width: 12),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        typeDisplay,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                        ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            typeDisplay,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            reqDate != null
+                                ? DateFormat('MMM dd, yyyy - hh:mm a').format(reqDate)
+                                : 'Unknown Date',
+                            style: const TextStyle(
+                              color: Colors.white54,
+                              fontSize: 12,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        reqDate != null
-                            ? DateFormat('MMM dd, yyyy - hh:mm a').format(reqDate)
-                            : 'Unknown Date',
-                        style: const TextStyle(
-                          color: Colors.white54,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
@@ -662,23 +691,32 @@ class _HOwnerHomeState extends State<HOwnerHome> with TickerProviderStateMixin {
         children: [
           Row(
             children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF00B4FF), Color(0xFF6DD3FF)],
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF00B4FF).withOpacity(0.4),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
+              Builder(
+                builder: (context) {
+                  return GestureDetector(
+                    onTap: () {
+                      Scaffold.of(context).openDrawer();
+                    },
+                    child: Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF00B4FF), Color(0xFF6DD3FF)],
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF00B4FF).withOpacity(0.4),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(Iconsax.user, color: Colors.white),
                     ),
-                  ],
-                ),
-                child: const Icon(Iconsax.user, color: Colors.white),
+                  );
+                }
               ),
               const SizedBox(width: 14),
               Column(
