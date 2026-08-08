@@ -4,7 +4,7 @@ import 'dart:ui';
 import 'package:bingo/H_Owner/h_owner_home.dart';
 import 'package:bingo/H_Owner/feature/payment/presentation/pages/payment_history_page.dart';
 import 'package:bingo/H_Owner/feature/profile_mainatin/presentation/widgets/h_owner_profile_drawer.dart';
-import 'package:bingo/b.dart';
+import 'package:bingo/H_Owner/H_Owner_Route_Tab.dart';
 import 'package:bingo/c.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -212,7 +212,7 @@ class RMNavigControll extends GetxController {
 
   late final List<Widget> screens = [
     const HOwnerHome(),
-    pgtwo(),
+    const HOwnerRouteTab(),
     pgthree(),
     const PaymentHistoryPage(),
   ];

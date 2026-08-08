@@ -1,6 +1,7 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:bingo/H_Owner/job_details_screen.dart';
+import 'package:bingo/H_Owner/H_Owner_Tracking_Map.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -153,6 +154,7 @@ class _pgthreeState extends State<pgthree> with SingleTickerProviderStateMixin {
   Widget _buildRequestList(String filterStatus) {
     var filteredList = _allRequests.where((req) {
       String status = req['status'] ?? 'pending';
+      if (filterStatus == 'pending') return status == 'pending' || status == 'assigned';
       return status == filterStatus;
     }).toList();
 
@@ -313,6 +315,40 @@ class _pgthreeState extends State<pgthree> with SingleTickerProviderStateMixin {
                   ),
               ],
             ),
+            if (request['assignedDriverId'] != null) ...[
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  const Icon(Iconsax.truck, size: 14, color: Color(0xFF00B4FF)),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      'Driver: ${request['assignedDriverName'] ?? 'Assigned'}',
+                      style: const TextStyle(color: Color(0xFF00B4FF), fontSize: 12, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => HOwnerTrackingMap(
+                          assignedDriverId: request['assignedDriverId'],
+                          driverName: request['assignedDriverName'] ?? 'Driver',
+                        ),
+                      ),
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(colors: [Color(0xFF00B4FF), Color(0xFF6DD3FF)]),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: const Text('Track', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
       ),

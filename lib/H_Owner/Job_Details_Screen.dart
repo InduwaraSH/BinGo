@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
+import 'H_Owner_Tracking_Map.dart';
 
 class JobDetailsScreen extends StatefulWidget {
   final Map<String, dynamic> requestData;
@@ -99,7 +100,10 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
 
     Color statusColor = Colors.orange;
     String statusDisplay = 'Pending';
-    if (statusStr == 'collected') {
+    if (statusStr == 'assigned') {
+      statusColor = const Color(0xFF00B4FF);
+      statusDisplay = 'Driver Assigned';
+    } else if (statusStr == 'collected') {
       statusColor = Colors.green;
       statusDisplay = 'Completed';
     } else if (statusStr == 'rejected') {
@@ -108,6 +112,9 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
     }
 
     final bool isEditable = statusStr == 'collected' || statusStr == 'rejected';
+    final String? assignedDriverId = req['assignedDriverId'];
+    final String? assignedDriverName = req['assignedDriverName'];
+    final String? assignedDriverMobile = req['assignedDriverMobile'];
 
     return Scaffold(
       backgroundColor: const Color(0xFF07121A),
@@ -187,6 +194,58 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
             _buildTimelineSteps(statusStr, createdDate, changedDate, req),
 
             const SizedBox(height: 32),
+
+            // Assigned driver card
+            if (assignedDriverId != null) ...[
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF00B4FF).withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFF00B4FF).withOpacity(0.3)),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(color: const Color(0xFF00B4FF).withOpacity(0.15), borderRadius: BorderRadius.circular(12)),
+                      child: const Icon(Iconsax.truck, color: Color(0xFF00B4FF), size: 22),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(assignedDriverName ?? 'Driver', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                          if (assignedDriverMobile != null)
+                            Text(assignedDriverMobile, style: const TextStyle(color: Colors.white54, fontSize: 12)),
+                        ],
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => HOwnerTrackingMap(
+                            assignedDriverId: assignedDriverId,
+                            driverName: assignedDriverName ?? 'Driver',
+                          ),
+                        ),
+                      ),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(colors: [Color(0xFF00B4FF), Color(0xFF6DD3FF)]),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Text('Track on Map', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
 
             // Weight chip if exists
             if (req['weightInKg'] != null)
@@ -357,6 +416,14 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
         stepStatus: status == 'pending' ? _StepStatus.active : _StepStatus.done,
         color: Colors.orangeAccent,
       ),
+      if (status == 'assigned' || status == 'collected')
+        _TimelineStep(
+          icon: Iconsax.truck,
+          title: 'Driver Assigned',
+          subtitle: req['assignedDriverName'] != null ? '${req['assignedDriverName']} is on the way' : 'A driver has been assigned',
+          stepStatus: status == 'assigned' ? _StepStatus.active : _StepStatus.done,
+          color: const Color(0xFF00B4FF),
+        ),
       if (status == 'collected')
         _TimelineStep(
           icon: Iconsax.tick_circle,
@@ -377,7 +444,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
           stepStatus: _StepStatus.failed,
           color: Colors.redAccent,
         ),
-      if (status == 'pending')
+      if (status == 'pending' || status == 'assigned')
         _TimelineStep(
           icon: Iconsax.tick_circle,
           title: 'Completion',

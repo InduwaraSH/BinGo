@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
@@ -156,6 +157,24 @@ class _HOwnerRegState extends State<HOwnerReg> with TickerProviderStateMixin {
               '_',
             ),
           });
+
+      // File this as a pending registration request for admin to review.
+      // Until admin approves it, AuthChecker blocks this account with a
+      // "Pending Approval" screen instead of the normal home screen.
+      await FirebaseFirestore.instance
+          .collection('registration_requests')
+          .doc('house_owner_$safeEmail')
+          .set({
+        'type': 'house_owner',
+        'status': 'pending',
+        'name': nameController.text.trim(),
+        'mobile': mobileController.text.trim(),
+        'nic': nicController.text.trim(),
+        'email': mailController.text.trim().toLowerCase(),
+        'address': addressController.text.trim(),
+        'houseNumber': idController.text.trim(),
+        'submittedAt': FieldValue.serverTimestamp(),
+      });
 
       _showSnack(
         '${nameController.text} Registration Request Sent Successfully',
