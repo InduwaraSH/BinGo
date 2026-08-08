@@ -2,7 +2,6 @@ import 'package:bingo/Common/Logging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:iconsax/iconsax.dart';
@@ -14,9 +13,7 @@ import 'H_Owner_Tracking_Map.dart';
 import 'pickup_location_picker.dart';
 
 class HOwnerHome extends StatefulWidget {
-  final String? displayName;
-
-  const HOwnerHome({super.key, this.displayName});
+  const HOwnerHome({super.key});
 
   @override
   State<HOwnerHome> createState() => _HOwnerHomeState();
@@ -50,19 +47,21 @@ class _HOwnerHomeState extends State<HOwnerHome> with TickerProviderStateMixin {
       CurvedAnimation(parent: _circleController, curve: Curves.easeInOut),
     );
 
-    _circleMove1 = Tween<Offset>(
-      begin: Offset.zero,
-      end: const Offset(0.05, -0.09),
-    ).animate(
-      CurvedAnimation(parent: _circleController, curve: Curves.easeInOut),
-    );
+    _circleMove1 =
+        Tween<Offset>(
+          begin: Offset.zero,
+          end: const Offset(0.05, -0.09),
+        ).animate(
+          CurvedAnimation(parent: _circleController, curve: Curves.easeInOut),
+        );
 
-    _circleMove2 = Tween<Offset>(
-      begin: Offset.zero,
-      end: const Offset(-0.05, 0.09),
-    ).animate(
-      CurvedAnimation(parent: _circleController, curve: Curves.easeInOut),
-    );
+    _circleMove2 =
+        Tween<Offset>(
+          begin: Offset.zero,
+          end: const Offset(-0.05, 0.09),
+        ).animate(
+          CurvedAnimation(parent: _circleController, curve: Curves.easeInOut),
+        );
   }
 
   Future<void> _fetchUserDataAndRequests() async {
@@ -86,7 +85,9 @@ class _HOwnerHomeState extends State<HOwnerHome> with TickerProviderStateMixin {
           .once();
 
       if (event.snapshot.value != null) {
-        final profileData = Map<String, dynamic>.from(event.snapshot.value as Map);
+        final profileData = Map<String, dynamic>.from(
+          event.snapshot.value as Map,
+        );
         if (mounted) {
           setState(() {
             _userProfile = profileData;
@@ -135,13 +136,20 @@ class _HOwnerHomeState extends State<HOwnerHome> with TickerProviderStateMixin {
     if (_safeEmail != null) {
       try {
         final snap = await FirebaseDatabase.instance
-            .ref('House_Owner_Profiles/House_Profile/$_safeEmail/Saved_Locations')
+            .ref(
+              'House_Owner_Profiles/House_Profile/$_safeEmail/Saved_Locations',
+            )
             .get();
         if (snap.value != null) {
           final raw = Map<String, dynamic>.from(snap.value as Map);
           savedLocations = raw.entries.map((e) {
             final v = Map<String, dynamic>.from(e.value as Map);
-            return {'key': e.key, 'label': v['label'], 'lat': v['lat'], 'lng': v['lng']};
+            return {
+              'key': e.key,
+              'label': v['label'],
+              'lat': v['lat'],
+              'lng': v['lng'],
+            };
           }).toList();
         }
       } catch (_) {
@@ -159,22 +167,28 @@ class _HOwnerHomeState extends State<HOwnerHome> with TickerProviderStateMixin {
             Future<void> useCurrentLocation() async {
               setModalState(() => isLocating = true);
               try {
-                bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+                bool serviceEnabled =
+                    await Geolocator.isLocationServiceEnabled();
                 if (!serviceEnabled) {
                   _showSnack('Please enable location services', Colors.orange);
                   return;
                 }
-                LocationPermission permission = await Geolocator.checkPermission();
+                LocationPermission permission =
+                    await Geolocator.checkPermission();
                 if (permission == LocationPermission.denied) {
                   permission = await Geolocator.requestPermission();
                 }
-                if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
+                if (permission == LocationPermission.denied ||
+                    permission == LocationPermission.deniedForever) {
                   _showSnack('Location permission denied', Colors.orange);
                   return;
                 }
                 final position = await Geolocator.getCurrentPosition();
                 setModalState(() {
-                  pickupLocation = LatLng(position.latitude, position.longitude);
+                  pickupLocation = LatLng(
+                    position.latitude,
+                    position.longitude,
+                  );
                   pickupLabel = null;
                   pickupFromSaved = false;
                 });
@@ -188,7 +202,10 @@ class _HOwnerHomeState extends State<HOwnerHome> with TickerProviderStateMixin {
             Future<void> pickOnMap() async {
               final result = await Navigator.push<LatLng>(
                 context,
-                MaterialPageRoute(builder: (_) => PickupLocationPicker(initialCenter: pickupLocation)),
+                MaterialPageRoute(
+                  builder: (_) =>
+                      PickupLocationPicker(initialCenter: pickupLocation),
+                ),
               );
               if (result != null) {
                 setModalState(() {
@@ -201,7 +218,10 @@ class _HOwnerHomeState extends State<HOwnerHome> with TickerProviderStateMixin {
 
             void selectSaved(Map<String, dynamic> loc) {
               setModalState(() {
-                pickupLocation = LatLng((loc['lat'] as num).toDouble(), (loc['lng'] as num).toDouble());
+                pickupLocation = LatLng(
+                  (loc['lat'] as num).toDouble(),
+                  (loc['lng'] as num).toDouble(),
+                );
                 pickupLabel = loc['label'] as String?;
                 pickupFromSaved = true;
               });
@@ -213,11 +233,22 @@ class _HOwnerHomeState extends State<HOwnerHome> with TickerProviderStateMixin {
               final key = trimmed.toLowerCase().replaceAll(RegExp(r'\s+'), '_');
               try {
                 await FirebaseDatabase.instance
-                    .ref('House_Owner_Profiles/House_Profile/$_safeEmail/Saved_Locations/$key')
-                    .set({'label': trimmed, 'lat': pickupLocation!.latitude, 'lng': pickupLocation!.longitude});
+                    .ref(
+                      'House_Owner_Profiles/House_Profile/$_safeEmail/Saved_Locations/$key',
+                    )
+                    .set({
+                      'label': trimmed,
+                      'lat': pickupLocation!.latitude,
+                      'lng': pickupLocation!.longitude,
+                    });
                 setModalState(() {
                   savedLocations.removeWhere((l) => l['key'] == key);
-                  savedLocations.add({'key': key, 'label': trimmed, 'lat': pickupLocation!.latitude, 'lng': pickupLocation!.longitude});
+                  savedLocations.add({
+                    'key': key,
+                    'label': trimmed,
+                    'lat': pickupLocation!.latitude,
+                    'lng': pickupLocation!.longitude,
+                  });
                   pickupLabel = trimmed;
                   pickupFromSaved = true;
                   saveLabelController.clear();
@@ -231,368 +262,491 @@ class _HOwnerHomeState extends State<HOwnerHome> with TickerProviderStateMixin {
               behavior: HitTestBehavior.opaque,
               onTap: () => FocusScope.of(context).unfocus(),
               child: Container(
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom,
-                left: 20,
-                right: 20,
-                top: 24,
-              ),
-              constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.9),
-              decoration: BoxDecoration(
-                color: const Color(0xFF07121A),
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(24),
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
+                  left: 20,
+                  right: 20,
+                  top: 24,
                 ),
-                border: Border.all(
-                  color: Colors.white.withOpacity(0.1),
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.9,
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF00B4FF).withOpacity(0.1),
-                    blurRadius: 20,
-                    offset: const Offset(0, -5),
-                  )
-                ],
-              ),
-              child: SingleChildScrollView(
-                keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-                child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 40,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: Colors.white30,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF07121A),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(24),
                   ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Place New Request',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Select garbage type to place a collection request. Your profile details will be attached automatically.',
-                    style: TextStyle(color: Colors.white60, fontSize: 13),
-                  ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Garbage Type',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildTypeOption(
-                    title: 'දිරණ (Biodegradable)',
-                    value: 'biodegradable',
-                    groupValue: selectedType,
-                    icon: Icons.eco,
-                    color: Colors.greenAccent,
-                    onChanged: (val) {
-                      setModalState(() => selectedType = val!);
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  _buildTypeOption(
-                    title: 'නොදිරණ (Non-biodegradable)',
-                    value: 'nonBiodegradable',
-                    groupValue: selectedType,
-                    icon: Iconsax.trash,
-                    color: Colors.orangeAccent,
-                    onChanged: (val) {
-                      setModalState(() => selectedType = val!);
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  _buildTypeOption(
-                    title: 'වීදුරු (Glass)',
-                    value: 'glass',
-                    groupValue: selectedType,
-                    icon: Iconsax.glass,
-                    color: Colors.lightBlueAccent,
-                    onChanged: (val) {
-                      setModalState(() => selectedType = val!);
-                    },
-                  ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Pickup Location',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: isLocating ? null : useCurrentLocation,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.03),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.white.withOpacity(0.1)),
-                            ),
-                            child: Center(
-                              child: isLocating
-                                  ? const SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white54),
-                                    )
-                                  : const Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(Iconsax.gps, size: 16, color: Colors.white70),
-                                        SizedBox(width: 8),
-                                        Text('Current Location', style: TextStyle(color: Colors.white70, fontSize: 13)),
-                                      ],
-                                    ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: pickOnMap,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.03),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.white.withOpacity(0.1)),
-                            ),
-                            child: const Center(
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Iconsax.map, size: 16, color: Colors.white70),
-                                  SizedBox(width: 8),
-                                  Text('Pick on Map', style: TextStyle(color: Colors.white70, fontSize: 13)),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (savedLocations.isNotEmpty) ...[
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      height: 36,
-                      child: ListView.separated(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: savedLocations.length,
-                        separatorBuilder: (_, __) => const SizedBox(width: 8),
-                        itemBuilder: (context, index) {
-                          final loc = savedLocations[index];
-                          final bool selected = pickupFromSaved && pickupLabel == loc['label'];
-                          final String label = (loc['label'] as String?) ?? 'Saved';
-                          return GestureDetector(
-                            onTap: () => selectSaved(loc),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 14),
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                color: selected ? const Color(0xFF00B4FF).withOpacity(0.15) : Colors.white.withOpacity(0.03),
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(color: selected ? const Color(0xFF00B4FF) : Colors.white.withOpacity(0.1)),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    label.toLowerCase() == 'home'
-                                        ? Iconsax.home
-                                        : label.toLowerCase() == 'office'
-                                            ? Iconsax.briefcase
-                                            : Iconsax.location,
-                                    size: 14,
-                                    color: selected ? const Color(0xFF00B4FF) : Colors.white54,
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(label, style: TextStyle(color: selected ? const Color(0xFF00B4FF) : Colors.white70, fontSize: 12, fontWeight: FontWeight.w600)),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      ),
+                  border: Border.all(color: Colors.white.withOpacity(0.1)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF00B4FF).withOpacity(0.1),
+                      blurRadius: 20,
+                      offset: const Offset(0, -5),
                     ),
                   ],
-                  if (pickupLocation != null) ...[
-                    const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.03),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.white.withOpacity(0.08)),
+                ),
+                child: SingleChildScrollView(
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 40,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: Colors.white30,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      const SizedBox(height: 24),
+                      const Text(
+                        'Place New Request',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Select garbage type to place a collection request. Your profile details will be attached automatically.',
+                        style: TextStyle(color: Colors.white60, fontSize: 13),
+                      ),
+                      const SizedBox(height: 24),
+                      const Text(
+                        'Garbage Type',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      _buildTypeOption(
+                        title: 'දිරණ (Biodegradable)',
+                        value: 'biodegradable',
+                        groupValue: selectedType,
+                        icon: Icons.eco,
+                        color: Colors.greenAccent,
+                        onChanged: (val) {
+                          setModalState(() => selectedType = val!);
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      _buildTypeOption(
+                        title: 'නොදිරණ (Non-biodegradable)',
+                        value: 'nonBiodegradable',
+                        groupValue: selectedType,
+                        icon: Iconsax.trash,
+                        color: Colors.orangeAccent,
+                        onChanged: (val) {
+                          setModalState(() => selectedType = val!);
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      _buildTypeOption(
+                        title: 'වීදුරු (Glass)',
+                        value: 'glass',
+                        groupValue: selectedType,
+                        icon: Iconsax.glass,
+                        color: Colors.lightBlueAccent,
+                        onChanged: (val) {
+                          setModalState(() => selectedType = val!);
+                        },
+                      ),
+                      const SizedBox(height: 24),
+                      const Text(
+                        'Pickup Location',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
                         children: [
-                          Row(
-                            children: [
-                              const Icon(Icons.location_on_rounded, color: Colors.greenAccent, size: 16),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  pickupLabel ?? '${pickupLocation!.latitude.toStringAsFixed(5)}, ${pickupLocation!.longitude.toStringAsFixed(5)}',
-                                  style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
-                                  overflow: TextOverflow.ellipsis,
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: isLocating ? null : useCurrentLocation,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
                                 ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.03),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: Colors.white.withOpacity(0.1),
+                                  ),
+                                ),
+                                child: Center(
+                                  child: isLocating
+                                      ? const SizedBox(
+                                          width: 16,
+                                          height: 16,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: Colors.white54,
+                                          ),
+                                        )
+                                      : const Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              Iconsax.gps,
+                                              size: 16,
+                                              color: Colors.white70,
+                                            ),
+                                            SizedBox(width: 8),
+                                            Text(
+                                              'Current Location',
+                                              style: TextStyle(
+                                                color: Colors.white70,
+                                                fontSize: 13,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: pickOnMap,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.03),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: Colors.white.withOpacity(0.1),
+                                  ),
+                                ),
+                                child: const Center(
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Iconsax.map,
+                                        size: 16,
+                                        color: Colors.white70,
+                                      ),
+                                      SizedBox(width: 8),
+                                      Text(
+                                        'Pick on Map',
+                                        style: TextStyle(
+                                          color: Colors.white70,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (savedLocations.isNotEmpty) ...[
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          height: 36,
+                          child: ListView.separated(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: savedLocations.length,
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(width: 8),
+                            itemBuilder: (context, index) {
+                              final loc = savedLocations[index];
+                              final bool selected =
+                                  pickupFromSaved &&
+                                  pickupLabel == loc['label'];
+                              final String label =
+                                  (loc['label'] as String?) ?? 'Saved';
+                              return GestureDetector(
+                                onTap: () => selectSaved(loc),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                  ),
+                                  alignment: Alignment.center,
+                                  decoration: BoxDecoration(
+                                    color: selected
+                                        ? const Color(
+                                            0xFF00B4FF,
+                                          ).withOpacity(0.15)
+                                        : Colors.white.withOpacity(0.03),
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(
+                                      color: selected
+                                          ? const Color(0xFF00B4FF)
+                                          : Colors.white.withOpacity(0.1),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        label.toLowerCase() == 'home'
+                                            ? Iconsax.home
+                                            : label.toLowerCase() == 'office'
+                                            ? Iconsax.briefcase
+                                            : Iconsax.location,
+                                        size: 14,
+                                        color: selected
+                                            ? const Color(0xFF00B4FF)
+                                            : Colors.white54,
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        label,
+                                        style: TextStyle(
+                                          color: selected
+                                              ? const Color(0xFF00B4FF)
+                                              : Colors.white70,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                      if (pickupLocation != null) ...[
+                        const SizedBox(height: 12),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.03),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.08),
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  const Icon(
+                                    Icons.location_on_rounded,
+                                    color: Colors.greenAccent,
+                                    size: 16,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      pickupLabel ??
+                                          '${pickupLocation!.latitude.toStringAsFixed(5)}, ${pickupLocation!.longitude.toStringAsFixed(5)}',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              if (!pickupFromSaved) ...[
+                                const SizedBox(height: 10),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: TextField(
+                                        controller: saveLabelController,
+                                        textInputAction: TextInputAction.done,
+                                        keyboardAppearance: Brightness.dark,
+                                        onSubmitted: (_) =>
+                                            FocusScope.of(context).unfocus(),
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 12,
+                                        ),
+                                        decoration: InputDecoration(
+                                          isDense: true,
+                                          hintText: 'Save as (e.g. Home)',
+                                          hintStyle: TextStyle(
+                                            color: Colors.white.withOpacity(
+                                              0.3,
+                                            ),
+                                            fontSize: 12,
+                                          ),
+                                          contentPadding:
+                                              const EdgeInsets.symmetric(
+                                                horizontal: 12,
+                                                vertical: 10,
+                                              ),
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              10,
+                                            ),
+                                            borderSide: BorderSide(
+                                              color: Colors.white.withOpacity(
+                                                0.1,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    GestureDetector(
+                                      onTap: () => saveCurrentAsLocation(
+                                        saveLabelController.text,
+                                      ),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 14,
+                                          vertical: 11,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: const Color(
+                                            0xFF00B4FF,
+                                          ).withOpacity(0.15),
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
+                                        ),
+                                        child: const Text(
+                                          'Save',
+                                          style: TextStyle(
+                                            color: Color(0xFF00B4FF),
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 24),
+                      const Text(
+                        'Estimated Weight (kg)',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.03),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.1),
+                          ),
+                        ),
+                        child: TextField(
+                          controller: weightController,
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          textInputAction: TextInputAction.done,
+                          keyboardAppearance: Brightness.dark,
+                          onSubmitted: (_) => FocusScope.of(context).unfocus(),
+                          style: const TextStyle(color: Colors.white),
+                          decoration: const InputDecoration(
+                            border: InputBorder.none,
+                            hintText: 'e.g. 5.5',
+                            hintStyle: TextStyle(color: Colors.white30),
+                            icon: Icon(Iconsax.weight, color: Colors.white54),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+                      GestureDetector(
+                        onTap: isSubmitting
+                            ? null
+                            : () async {
+                                if (weightController.text.trim().isEmpty) {
+                                  _showSnack(
+                                    'Please enter estimated weight',
+                                    Colors.orange,
+                                  );
+                                  return;
+                                }
+                                if (pickupLocation == null) {
+                                  _showSnack(
+                                    'Please set a pickup location',
+                                    Colors.orange,
+                                  );
+                                  return;
+                                }
+                                setModalState(() => isSubmitting = true);
+                                await _submitRequest(
+                                  selectedType,
+                                  weightController.text.trim(),
+                                  pickupLocation!,
+                                );
+                                Navigator.pop(context);
+                                _showSnack(
+                                  'Request placed successfully!',
+                                  Colors.green,
+                                );
+                              },
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF00B4FF), Color(0xFF6DD3FF)],
+                            ),
+                            borderRadius: BorderRadius.circular(14),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF00B4FF).withOpacity(0.3),
+                                blurRadius: 15,
+                                offset: const Offset(0, 5),
                               ),
                             ],
                           ),
-                          if (!pickupFromSaved) ...[
-                            const SizedBox(height: 10),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: TextField(
-                                    controller: saveLabelController,
-                                    textInputAction: TextInputAction.done,
-                                    keyboardAppearance: Brightness.dark,
-                                    onSubmitted: (_) => FocusScope.of(context).unfocus(),
-                                    style: const TextStyle(color: Colors.white, fontSize: 12),
-                                    decoration: InputDecoration(
-                                      isDense: true,
-                                      hintText: 'Save as (e.g. Home)',
-                                      hintStyle: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 12),
-                                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: Colors.white.withOpacity(0.1))),
+                          child: Center(
+                            child: isSubmitting
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Text(
+                                    'Submit Request',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                                ),
-                                const SizedBox(width: 8),
-                                GestureDetector(
-                                  onTap: () => saveCurrentAsLocation(saveLabelController.text),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-                                    decoration: BoxDecoration(color: const Color(0xFF00B4FF).withOpacity(0.15), borderRadius: BorderRadius.circular(10)),
-                                    child: const Text('Save', style: TextStyle(color: Color(0xFF00B4FF), fontSize: 12, fontWeight: FontWeight.bold)),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Estimated Weight (kg)',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.03),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: Colors.white.withOpacity(0.1)),
-                    ),
-                    child: TextField(
-                      controller: weightController,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      textInputAction: TextInputAction.done,
-                      keyboardAppearance: Brightness.dark,
-                      onSubmitted: (_) => FocusScope.of(context).unfocus(),
-                      style: const TextStyle(color: Colors.white),
-                      decoration: const InputDecoration(
-                        border: InputBorder.none,
-                        hintText: 'e.g. 5.5',
-                        hintStyle: TextStyle(color: Colors.white30),
-                        icon: Icon(Iconsax.weight, color: Colors.white54),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-                  GestureDetector(
-                    onTap: isSubmitting
-                        ? null
-                        : () async {
-                            if (weightController.text.trim().isEmpty) {
-                              _showSnack('Please enter estimated weight', Colors.orange);
-                              return;
-                            }
-                            if (pickupLocation == null) {
-                              _showSnack('Please set a pickup location', Colors.orange);
-                              return;
-                            }
-                            setModalState(() => isSubmitting = true);
-                            await _submitRequest(selectedType, weightController.text.trim(), pickupLocation!);
-                            Navigator.pop(context);
-                            _showSnack(
-                              'Request placed successfully!',
-                              Colors.green,
-                            );
-                          },
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 300),
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF00B4FF), Color(0xFF6DD3FF)],
+                          ),
                         ),
-                        borderRadius: BorderRadius.circular(14),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF00B4FF).withOpacity(0.3),
-                            blurRadius: 15,
-                            offset: const Offset(0, 5),
-                          )
-                        ],
                       ),
-                      child: Center(
-                        child: isSubmitting
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Text(
-                                'Submit Request',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                      ),
-                    ),
+                      const SizedBox(height: 32),
+                    ],
                   ),
-                  const SizedBox(height: 32),
-                ],
                 ),
-              ),
               ),
             );
           },
@@ -639,20 +793,24 @@ class _HOwnerHomeState extends State<HOwnerHome> with TickerProviderStateMixin {
                 ),
               ),
             ),
-            if (isSelected)
-              Icon(Icons.check_circle, color: color, size: 20),
+            if (isSelected) Icon(Icons.check_circle, color: color, size: 20),
           ],
         ),
       ),
     );
   }
 
-  Future<void> _submitRequest(String type, String weight, LatLng pickupLocation) async {
+  Future<void> _submitRequest(
+    String type,
+    String weight,
+    LatLng pickupLocation,
+  ) async {
     try {
       await FirebaseFirestore.instance.collection('requests').add({
         'userName': _userProfile['Owner_Name'] ?? 'Unknown User',
         'userMobile': _userProfile['Owner_Mobile'] ?? '',
-        'userAddress': _userProfile['Owner_Address']?.replaceAll('_', '/') ?? '',
+        'userAddress':
+            _userProfile['Owner_Address']?.replaceAll('_', '/') ?? '',
         'userEmail': _currentUserEmail,
         'requestedDateTime': FieldValue.serverTimestamp(),
         'garbageType': type,
@@ -742,11 +900,19 @@ class _HOwnerHomeState extends State<HOwnerHome> with TickerProviderStateMixin {
                   child: StreamBuilder<QuerySnapshot>(
                     stream: FirebaseFirestore.instance
                         .collection('requests')
-                        .where('userEmail', isEqualTo: FirebaseAuth.instance.currentUser?.email)
+                        .where(
+                          'userEmail',
+                          isEqualTo: FirebaseAuth.instance.currentUser?.email,
+                        )
                         .snapshots(),
                     builder: (context, snapshot) {
                       if (snapshot.hasError) {
-                        return Center(child: Text('Error: ${snapshot.error}', style: const TextStyle(color: Colors.red)));
+                        return Center(
+                          child: Text(
+                            'Error: ${snapshot.error}',
+                            style: const TextStyle(color: Colors.red),
+                          ),
+                        );
                       }
 
                       if (snapshot.connectionState == ConnectionState.waiting) {
@@ -785,8 +951,10 @@ class _HOwnerHomeState extends State<HOwnerHome> with TickerProviderStateMixin {
 
                       return ListView.builder(
                         padding: const EdgeInsets.symmetric(horizontal: 20),
-                        shrinkWrap: true, // Add shrinkWrap as it's often better for small lists in Column
-                        physics: const NeverScrollableScrollPhysics(), // Disable scrolling as it's a fixed small list
+                        shrinkWrap:
+                            true, // Add shrinkWrap as it's often better for small lists in Column
+                        physics:
+                            const NeverScrollableScrollPhysics(), // Disable scrolling as it's a fixed small list
                         itemCount: recentDocs.length,
                         itemBuilder: (context, index) {
                           return _buildRequestCard(recentDocs[index]);
@@ -882,7 +1050,9 @@ class _HOwnerHomeState extends State<HOwnerHome> with TickerProviderStateMixin {
                           const SizedBox(height: 4),
                           Text(
                             reqDate != null
-                                ? DateFormat('MMM dd, yyyy - hh:mm a').format(reqDate)
+                                ? DateFormat(
+                                    'MMM dd, yyyy - hh:mm a',
+                                  ).format(reqDate)
                                 : 'Unknown Date',
                             style: const TextStyle(
                               color: Colors.white54,
@@ -899,7 +1069,10 @@ class _HOwnerHomeState extends State<HOwnerHome> with TickerProviderStateMixin {
               ),
               const SizedBox(width: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: statusColor.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(12),
@@ -948,7 +1121,11 @@ class _HOwnerHomeState extends State<HOwnerHome> with TickerProviderStateMixin {
                 Expanded(
                   child: Text(
                     'Driver: ${assignedDriverName ?? 'Assigned'}',
-                    style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
                 GestureDetector(
@@ -962,12 +1139,24 @@ class _HOwnerHomeState extends State<HOwnerHome> with TickerProviderStateMixin {
                     ),
                   ),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(colors: [Color(0xFF00B4FF), Color(0xFF6DD3FF)]),
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF00B4FF), Color(0xFF6DD3FF)],
+                      ),
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: const Text('Track', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                    child: const Text(
+                      'Track',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -1007,7 +1196,7 @@ class _HOwnerHomeState extends State<HOwnerHome> with TickerProviderStateMixin {
               'Place Request',
               style: TextStyle(color: Color(0xFF00B4FF)),
             ),
-          )
+          ),
         ],
       ),
     );
@@ -1046,7 +1235,7 @@ class _HOwnerHomeState extends State<HOwnerHome> with TickerProviderStateMixin {
                       child: const Icon(Iconsax.user, color: Colors.white),
                     ),
                   );
-                }
+                },
               ),
               const SizedBox(width: 14),
               Column(
@@ -1079,7 +1268,7 @@ class _HOwnerHomeState extends State<HOwnerHome> with TickerProviderStateMixin {
                 );
               });
             },
-          )
+          ),
         ],
       ),
     );
