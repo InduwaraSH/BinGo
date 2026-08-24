@@ -827,6 +827,12 @@ class _HOwnerHomeState extends State<HOwnerHome> with TickerProviderStateMixin {
   }
 
   Future<void> _showComplaintSheet() async {
+    final TextEditingController nameController = TextEditingController(
+      text: _userProfile['Owner_Name'] ?? '',
+    );
+    final TextEditingController contactController = TextEditingController(
+      text: _userProfile['Owner_Mobile'] ?? '',
+    );
     final TextEditingController complaintController = TextEditingController();
     bool isSubmitting = false;
 
@@ -838,7 +844,20 @@ class _HOwnerHomeState extends State<HOwnerHome> with TickerProviderStateMixin {
         return StatefulBuilder(
           builder: (context, setModalState) {
             Future<void> submitComplaint() async {
+              final name = nameController.text.trim();
+              final contact = contactController.text.trim();
               final message = complaintController.text.trim();
+
+              if (name.isEmpty) {
+                _showSnack('Please enter your name', Colors.orange);
+                return;
+              }
+
+              if (contact.isEmpty) {
+                _showSnack('Please enter your contact number', Colors.orange);
+                return;
+              }
+
               if (message.isEmpty) {
                 _showSnack('Please enter your complaint', Colors.orange);
                 return;
@@ -849,7 +868,8 @@ class _HOwnerHomeState extends State<HOwnerHome> with TickerProviderStateMixin {
               try {
                 await FirebaseFirestore.instance.collection('complaints').add({
                   'userEmail': FirebaseAuth.instance.currentUser?.email,
-                  'userName': _userProfile['Owner_Name'] ?? 'Owner',
+                  'userName': name,
+                  'contactNumber': contact,
                   'message': message,
                   'createdAt': FieldValue.serverTimestamp(),
                   'status': 'pending',
@@ -916,19 +936,100 @@ class _HOwnerHomeState extends State<HOwnerHome> with TickerProviderStateMixin {
                         style: TextStyle(color: Colors.white60, fontSize: 13),
                       ),
                       const SizedBox(height: 20),
+                      const Text(
+                        'Name',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.03),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.08),
+                          ),
+                        ),
+                        child: TextField(
+                          controller: nameController,
+                          keyboardAppearance: Brightness.dark,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                          ),
+                          decoration: const InputDecoration(
+                            border: InputBorder.none,
+                            hintText: 'Enter your full name',
+                            hintStyle: TextStyle(color: Colors.white30),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Contact Number',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.03),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.08),
+                          ),
+                        ),
+                        child: TextField(
+                          controller: contactController,
+                          keyboardType: TextInputType.phone,
+                          keyboardAppearance: Brightness.dark,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                          ),
+                          decoration: const InputDecoration(
+                            border: InputBorder.none,
+                            hintText: 'Enter contact number',
+                            hintStyle: TextStyle(color: Colors.white30),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Complaint Description',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.03),
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.white.withOpacity(0.08)),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.08),
+                          ),
                         ),
                         child: TextField(
                           controller: complaintController,
                           maxLines: 6,
                           minLines: 4,
                           keyboardAppearance: Brightness.dark,
-                          style: const TextStyle(color: Colors.white, fontSize: 14),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                          ),
                           decoration: InputDecoration(
                             border: InputBorder.none,
                             hintText: 'Describe your complaint here...',
@@ -1076,13 +1177,20 @@ class _HOwnerHomeState extends State<HOwnerHome> with TickerProviderStateMixin {
                               ),
                               decoration: BoxDecoration(
                                 gradient: const LinearGradient(
-                                  colors: [Color(0xFF00B4FF), Color(0xFF6DD3FF)],
+                                  colors: [
+                                    Color(0xFF00B4FF),
+                                    Color(0xFF6DD3FF),
+                                  ],
                                 ),
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Row(
                                 children: const [
-                                  Icon(Icons.add, color: Colors.white, size: 16),
+                                  Icon(
+                                    Icons.add,
+                                    color: Colors.white,
+                                    size: 16,
+                                  ),
                                   SizedBox(width: 4),
                                   Text(
                                     'New',
