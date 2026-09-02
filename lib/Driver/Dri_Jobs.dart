@@ -82,6 +82,9 @@ class _DriJobsState extends State<DriJobs> with SingleTickerProviderStateMixin {
                     final docs = snapshot.data?.docs ?? [];
                     final all = docs.map((d) => {'id': d.id, ...(d.data() as Map<String, dynamic>)}).toList();
 
+                    // Today's jobs require both the assigned status and a
+                    // local-calendar assignedAt date; completed jobs are kept
+                    // by status and are not limited to today's date.
                     final today = all.where((r) {
                       return r['status'] == 'assigned' && DriverJobsQuery.isToday(DriverJobsQuery.assignedAtOf(r));
                     }).toList();
@@ -108,6 +111,8 @@ class _DriJobsState extends State<DriJobs> with SingleTickerProviderStateMixin {
   }
 
   int _compareByAssignedAt(Map<String, dynamic> a, Map<String, dynamic> b) {
+    // Newer assignments appear first, while records without a timestamp stay
+    // at the end instead of causing a failed comparison.
     final tA = DriverJobsQuery.assignedAtOf(a);
     final tB = DriverJobsQuery.assignedAtOf(b);
     if (tA == null && tB == null) return 0;
