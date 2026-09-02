@@ -826,6 +826,274 @@ class _HOwnerHomeState extends State<HOwnerHome> with TickerProviderStateMixin {
     }
   }
 
+  Future<void> _showComplaintSheet() async {
+    final TextEditingController nameController = TextEditingController(
+      text: _userProfile['Owner_Name'] ?? '',
+    );
+    final TextEditingController contactController = TextEditingController(
+      text: _userProfile['Owner_Mobile'] ?? '',
+    );
+    final TextEditingController complaintController = TextEditingController();
+    bool isSubmitting = false;
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            Future<void> submitComplaint() async {
+              final name = nameController.text.trim();
+              final contact = contactController.text.trim();
+              final message = complaintController.text.trim();
+
+              if (name.isEmpty) {
+                _showSnack('Please enter your name', Colors.orange);
+                return;
+              }
+
+              if (contact.isEmpty) {
+                _showSnack('Please enter your contact number', Colors.orange);
+                return;
+              }
+
+              if (message.isEmpty) {
+                _showSnack('Please enter your complaint', Colors.orange);
+                return;
+              }
+
+              setModalState(() => isSubmitting = true);
+
+              try {
+                await FirebaseFirestore.instance.collection('complaints').add({
+                  'userEmail': FirebaseAuth.instance.currentUser?.email,
+                  'userName': name,
+                  'contactNumber': contact,
+                  'message': message,
+                  'createdAt': FieldValue.serverTimestamp(),
+                  'status': 'pending',
+                });
+
+                if (!mounted) return;
+                Navigator.pop(context);
+                _showSnack('Complaint submitted successfully', Colors.green);
+              } catch (e) {
+                _showSnack('Unable to submit complaint', Colors.red);
+              } finally {
+                if (mounted) {
+                  setModalState(() => isSubmitting = false);
+                }
+              }
+            }
+
+            return GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => FocusScope.of(context).unfocus(),
+              child: Container(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
+                  left: 20,
+                  right: 20,
+                  top: 24,
+                ),
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.75,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF07121A),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(24),
+                  ),
+                  border: Border.all(color: Colors.white.withOpacity(0.1)),
+                ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 42,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: Colors.white30,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      const Text(
+                        'Submit a Complaint',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Tell us about the issue you are facing. We will review it and follow up as needed.',
+                        style: TextStyle(color: Colors.white60, fontSize: 13),
+                      ),
+                      const SizedBox(height: 20),
+                      const Text(
+                        'Name',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.03),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.08),
+                          ),
+                        ),
+                        child: TextField(
+                          controller: nameController,
+                          keyboardAppearance: Brightness.dark,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                          ),
+                          decoration: const InputDecoration(
+                            border: InputBorder.none,
+                            hintText: 'Enter your full name',
+                            hintStyle: TextStyle(color: Colors.white30),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Contact Number',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.03),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.08),
+                          ),
+                        ),
+                        child: TextField(
+                          controller: contactController,
+                          keyboardType: TextInputType.phone,
+                          keyboardAppearance: Brightness.dark,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                          ),
+                          decoration: const InputDecoration(
+                            border: InputBorder.none,
+                            hintText: 'Enter contact number',
+                            hintStyle: TextStyle(color: Colors.white30),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Complaint Description',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.03),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.08),
+                          ),
+                        ),
+                        child: TextField(
+                          controller: complaintController,
+                          maxLines: 6,
+                          minLines: 4,
+                          keyboardAppearance: Brightness.dark,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                          ),
+                          decoration: InputDecoration(
+                            border: InputBorder.none,
+                            hintText: 'Describe your complaint here...',
+                            hintStyle: TextStyle(
+                              color: Colors.white30,
+                              fontSize: 14,
+                            ),
+                            contentPadding: EdgeInsets.zero,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      GestureDetector(
+                        onTap: isSubmitting ? null : submitComplaint,
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFFFFA726), Color(0xFFFFC857)],
+                            ),
+                            borderRadius: BorderRadius.circular(14),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.orange.withOpacity(0.25),
+                                blurRadius: 15,
+                                offset: const Offset(0, 5),
+                              ),
+                            ],
+                          ),
+                          child: Center(
+                            child: isSubmitting
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Text(
+                                    'Send Complaint',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   void _showSnack(String msg, Color color) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -855,42 +1123,91 @@ class _HOwnerHomeState extends State<HOwnerHome> with TickerProviderStateMixin {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Recent Requests',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                      const Expanded(
+                        child: Text(
+                          'Recent Requests',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
-                      GestureDetector(
-                        onTap: _showNewRequestModal,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFF00B4FF), Color(0xFF6DD3FF)],
-                            ),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Row(
-                            children: const [
-                              Icon(Icons.add, color: Colors.white, size: 16),
-                              SizedBox(width: 4),
-                              Text(
-                                'New',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13,
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          GestureDetector(
+                            onTap: _showComplaintSheet,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.orange.withOpacity(0.12),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: Colors.orange.withOpacity(0.3),
                                 ),
                               ),
-                            ],
+                              child: const Row(
+                                children: [
+                                  Icon(
+                                    Icons.report_problem_outlined,
+                                    color: Colors.orange,
+                                    size: 15,
+                                  ),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    'Complaint',
+                                    style: TextStyle(
+                                      color: Colors.orange,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                        ),
+                          const SizedBox(width: 10),
+                          GestureDetector(
+                            onTap: _showNewRequestModal,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [
+                                    Color(0xFF00B4FF),
+                                    Color(0xFF6DD3FF),
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Row(
+                                children: const [
+                                  Icon(
+                                    Icons.add,
+                                    color: Colors.white,
+                                    size: 16,
+                                  ),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    'New',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
