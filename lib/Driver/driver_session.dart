@@ -32,12 +32,16 @@ class DriverSessionController extends GetxController {
       return;
     }
     try {
+      // Auth identifies the person by email, while driver-facing features use
+      // the matching Firestore document id as their shared driver key.
       final query = await FirebaseFirestore.instance
           .collection('drivers')
           .where('email', isEqualTo: email.trim().toLowerCase())
           .limit(1)
           .get();
       if (query.docs.isNotEmpty) {
+        // The admin workflow should keep this email unique, so the limited
+        // query intentionally populates the first matching driver record.
         final doc = query.docs.first;
         final data = doc.data();
         driverId.value = doc.id;
@@ -52,6 +56,8 @@ class DriverSessionController extends GetxController {
             data['workStartedDate'] != null ? (data['workStartedDate'] as Timestamp).toDate() : null;
       }
     } catch (_) {
+      // Keep the controller in its unlinked state so the UI can explain the
+      // missing profile instead of exposing a partially loaded driver record.
       // Leave driverId null; UI shows a "not linked to a driver profile" state.
     } finally {
       isLoaded.value = true;
