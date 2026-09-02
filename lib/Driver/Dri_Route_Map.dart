@@ -32,6 +32,8 @@ class _DriRouteMapState extends State<DriRouteMap> {
   }
 
   Future<void> _startWatchingMyPosition() async {
+    // This subscription updates the open map only; background driver tracking
+    // is managed separately by DriverTrackingGate.
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) return;
 
@@ -85,6 +87,8 @@ class _DriRouteMapState extends State<DriRouteMap> {
                               .where((r) => r['status'] == 'assigned' && DriverJobsQuery.isToday(DriverJobsQuery.assignedAtOf(r)))
                               .toList();
 
+                              // Coordinates can be rendered as map markers; jobs
+                              // without both values remain visible in the list.
                           final jobsWithCoords = activeJobs.where((j) => j['pickupLat'] != null && j['pickupLng'] != null).toList();
                           final jobsWithoutCoords = activeJobs.where((j) => j['pickupLat'] == null || j['pickupLng'] == null).toList();
 

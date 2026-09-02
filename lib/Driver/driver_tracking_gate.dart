@@ -33,6 +33,8 @@ class _DriverTrackingGateState extends State<DriverTrackingGate> {
   }
 
   void _onDriverIdChanged(String? driverId) {
+    // A session change replaces the previous jobs stream. The id guard below
+    // prevents an older stream callback from controlling the new driver's GPS.
     _jobsSub?.cancel();
     _jobsSub = null;
     _watchingDriverId = driverId;
@@ -45,6 +47,8 @@ class _DriverTrackingGateState extends State<DriverTrackingGate> {
     _jobsSub = DriverJobsQuery.assignedToDriver(driverId).listen((snapshot) {
       if (_watchingDriverId != driverId) return;
 
+      // Background tracking is needed only while at least one pickup is both
+      // assigned and dated today; the first match supplies the active request id.
       final activeJobs = snapshot.docs.where((doc) {
         final data = doc.data() as Map<String, dynamic>;
         return data['status'] == 'assigned' && DriverJobsQuery.isToday(DriverJobsQuery.assignedAtOf(data));

@@ -19,6 +19,8 @@ class DriverLocationService {
   final RxBool isTracking = false.obs;
 
   Future<bool> _ensurePermission() async {
+    // Check the service before requesting permission because a granted app
+    // permission cannot enable a location service that is switched off.
     final serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) return false;
 
@@ -39,6 +41,8 @@ class DriverLocationService {
   }
 
   LocationSettings _buildLocationSettings() {
+    // Android and iOS need their own settings for foreground notifications and
+    // background updates; other platforms use the shared location settings.
     if (Platform.isAndroid) {
       return AndroidSettings(
         accuracy: LocationAccuracy.high,
@@ -73,6 +77,8 @@ class DriverLocationService {
 
     _activeDriverId = driverId;
 
+    // Keep the latest position in one merge-updated document so map consumers
+    // can read the driver's location without replacing unrelated fields.
     _subscription = Geolocator.getPositionStream(locationSettings: _buildLocationSettings())
         .listen((Position position) {
       FirebaseFirestore.instance.collection('driver_locations').doc(driverId).set({
