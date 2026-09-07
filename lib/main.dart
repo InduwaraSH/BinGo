@@ -5,13 +5,20 @@ import 'package:flutter/material.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  Object? firebaseError;
+  try {
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  } catch (error) {
+    firebaseError = error;
+  }
 
-  runApp(const MyApp());
+  runApp(MyApp(firebaseError: firebaseError));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({super.key, this.firebaseError});
+
+  final Object? firebaseError;
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +28,27 @@ class MyApp extends StatelessWidget {
         brightness: Brightness.dark,
         scaffoldBackgroundColor: const Color(0xFF07121A),
       ),
-      home: const AuthChecker(),
+      home: firebaseError == null
+          ? const AuthChecker()
+          : StartupError(error: firebaseError!),
+    );
+  }
+}
+
+class StartupError extends StatelessWidget {
+  const StartupError({super.key, required this.error});
+
+  final Object error;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text('Unable to initialize the app.\n$error'),
+        ),
+      ),
     );
   }
 }
